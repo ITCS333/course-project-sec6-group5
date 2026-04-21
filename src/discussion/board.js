@@ -13,7 +13,6 @@ function createTopicArticle(topic) {
   const h3 = document.createElement("h3");
   const link = document.createElement("a");
 
-  // FIXED
   link.href = topic.html?id=${topic.id};
   link.textContent = topic.subject;
 
@@ -89,7 +88,7 @@ async function handleCreateTopic(event) {
 }
 
 // ----------------------------
-// Delete Topic
+// Delete / Edit Topic
 // ----------------------------
 async function handleTopicListClick(event) {
   const id = event.target.dataset.id;
