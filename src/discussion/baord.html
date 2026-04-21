@@ -8,6 +8,9 @@
     <!-- Title -->
     <title>Discussion Board</title>
 
+    <!-- Required JS file -->
+    <script src="board.js" defer></script>
+
     <!-- Simple CSS -->
     <style>
         body {
@@ -62,92 +65,45 @@
         }
     </style>
 </head>
+
 <body>
 
-    <!-- Header -->
-    <header>
-        <h1>General Discussion Board</h1>
-    </header>
+<!-- Header -->
+<header>
+    <h1>General Discussion Board</h1>
+</header>
 
-    <main>
+<main>
 
-        <!-- Section 1: New Topic -->
-        <section>
-            <h2>Start a New Topic</h2>
+    <!-- Section 1: New Topic -->
+    <section>
+        <h2>Start a New Topic</h2>
 
-            <form id="new-topic-form" action="#">
-                <fieldset>
-                    <legend>New Topic Details</legend>
+        <form id="new-topic-form" action="#">
+            <fieldset>
+                <legend>New Topic Details</legend>
 
-                    <label for="topic-subject">Topic Subject:</label>
-                    <input type="text" id="topic-subject" required>
+                <label for="topic-subject">Topic Subject:</label>
+                <input type="text" id="topic-subject" required>
 
-                    <label for="topic-message">Message:</label>
-                    <textarea id="topic-message" rows="6" required></textarea>
+                <label for="topic-message">Message:</label>
+                <textarea id="topic-message" rows="6" required></textarea>
 
-                    <button id="create-topic" type="submit">Create Topic</button>
-                </fieldset>
-            </form>
-        </section>
+                <button id="create-topic" type="submit">Create Topic</button>
+            </fieldset>
+        </form>
+    </section>
 
-        <!-- Section 2: Topics -->
-        <section>
-            <h2>All Topics</h2>
+    <!-- Section 2: Topics -->
+    <section>
+        <h2>All Topics</h2>
 
-            <div>
+        <!-- IMPORTANT: required container for JS -->
+        <div id="topic-list-container"></div>
 
-                <!-- Topic 1 -->
-                <article>
-                    <h3>
-                        <a href="topic-detail.html">Question about CSS Flexbox</a>
-                    </h3>
+    </section>
 
-                    <footer>
-                        Posted by: Student Name on 2026-04-21
-                    </footer>
-
-                    <div class="actions">
-                        <button>Edit</button>
-                        <button>Delete</button>
-                    </div>
-                </article>
-
-                <!-- Topic 2 -->
-                <article>
-                    <h3>
-                        <a href="topic-detail.html">How to use JavaScript events?</a>
-                    </h3>
-
-                    <footer>
-                        Posted by: Hessa on 2026-04-20
-                    </footer>
-
-                    <div class="actions">
-                        <button>Edit</button>
-                        <button>Delete</button>
-                    </div>
-                </article>
-
-                <!-- Topic 3 -->
-                <article>
-                    <h3>
-                        <a href="topic-detail.html">Best way to design responsive pages</a>
-                    </h3>
-
-                    <footer>
-                        Posted by: Student Name on 2026-04-19
-                    </footer>
-
-                    <div class="actions">
-                        <button>Edit</button>
-                        <button>Delete</button>
-                    </div>
-                </article>
-
-            </div>
-        </section>
-
-    </main>
+</main>
 
 </body>
 </html>
