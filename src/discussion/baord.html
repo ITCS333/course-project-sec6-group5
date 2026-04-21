@@ -1,197 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Add the 'meta' tag for character encoding (UTF-8). -->
+    <!-- Meta tags -->
     <meta charset="UTF-8">
-
-    <!-- Add the responsive 'viewport' meta tag. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-
-    <script src="board.js" defer></script>
-
-    <!-- Add a title, e.g., "Discussion Board". -->
+    <!-- Title -->
     <title>Discussion Board</title>
 
-    <!-- Link to your CSS framework or stylesheet. -->
-    <link rel="stylesheet" href="styles.css"> 
+    <!-- Simple CSS -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        form input, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        article {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        footer {
+            font-size: 12px;
+            color: gray;
+        }
+
+        .actions button {
+            margin-right: 10px;
+            background-color: #555;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Create a 'header' with a main heading ('h1') "General Discussion Board". -->
+    <!-- Header -->
     <header>
         <h1>General Discussion Board</h1>
     </header>
 
-    <!-- Create the 'main' content area. -->
     <main>
 
-        <!-- Section 1: Create a New Topic -->
-        <!-- Create a 'section' for the "new topic" form. -->
+        <!-- Section 1: New Topic -->
         <section>
-            <!-- Add a sub-heading ('h2') "Start a New Topic". -->
             <h2>Start a New Topic</h2>
 
-            <!-- Create a 'form' with an id "new-topic-form". Action can be '#'. -->
             <form id="new-topic-form" action="#">
-                <!-- Use a 'fieldset' to group the form controls. -->
                 <fieldset>
-                    <!-- Add a 'legend', e.g., "New Topic Details". -->
                     <legend>New Topic Details</legend>
 
-                    <!-- Add a 'label' and 'input' for the topic subject. -->
                     <label for="topic-subject">Topic Subject:</label>
-                    <input id="topic-subject" type="text" required>
+                    <input type="text" id="topic-subject" required>
 
-                    <!-- Add a 'label' and 'textarea' for the main message. -->
-                    <label for="topic-message">Main Message:</label>
+                    <label for="topic-message">Message:</label>
                     <textarea id="topic-message" rows="6" required></textarea>
 
-                    <!-- Add a 'button' to submit the form. -->
                     <button id="create-topic" type="submit">Create Topic</button>
                 </fieldset>
             </form>
         </section>
-        <!-- End of form section. -->
 
-        <!-- Section 2: Existing Topics -->
-        <!-- Create a 'section' to display the list of current topics. -->
+        <!-- Section 2: Topics -->
         <section>
-            <!-- Add a sub-heading ('h2') "All Topics". -->
             <h2>All Topics</h2>
-            
-            <!-- Add a container (like a 'div') to hold the list of topics. -->
-            <div id="topic-list-container">
 
-                <!-- Example Topic 1: -->
-                <!-- TODO: Use an 'article' for each topic. -->
+            <div>
+
+                <!-- Topic 1 -->
                 <article>
-                    <!-- Add a heading ('h3') containing an anchor tag ('a') linking to the detail page. -->
-                    <h3><a href="topic-detail.html">Question about CSS Flexbox</a></h3>
-                    
-                    <!-- Use a 'footer' element for metadata. -->
+                    <h3>
+                        <a href="topic-detail.html">Question about CSS Flexbox</a>
+                    </h3>
+
                     <footer>
-                        <span>Posted by: Student Name on 2023-11-25</span>
-                    </footer>
-
-                    <!-- Add a container (e.g., a 'div') for action buttons. -->
-                    <div class="action-buttons">
-                        <!-- Add an "Edit" button/link. -->
-                        <a href="edit-topic.html">Edit</a>
-                        <!-- Add a "Delete" button/link. -->
-                        <a href="delete-topic.html">Delete</a>
-                    </div>
-                </article>
-
-                <!-- Example Topic 2: -->
-                <article>
-                    <h3><a href="topic-detail.html">Best Practices for Responsive Design</a></h3>
-                    <footer>
-                        <span>Posted by: Another Student on 2023-11-24</span>
-                    </footer>
-                    <div class="action-buttons">
-                        <a href="edit-topic.html">Edit</a>
-                        <a href="delete-topic.html">Delete</a>
-                    </div>
-                </article>
-
-                <!-- Example Topic 3: -->
-                <article>
-                    <h3><a href="topic-detail.html">Understanding JavaScript Promises</a></h3>
-                    <footer>
-                        <span>Posted by: Student Learner on 2023-11-23</span>
-                    </footer>
-                    <div class="action-buttons">
-                        <a href="edit-topic.html">Edit</a>
-                        <a href="delete-topic.html">Delete</a>
-                    </div>
-                </article>
-            </div>
-            <!-- End of topics container. -->
-        </section>
-        <!-- End of list section. -->
-
-    </main>
-    <!-- End of main. -->
-
-</body>
-</html>
-[9:14 PM, 4/21/2026] Hessaa: <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Discussion Board</title>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
-</head>
-<body>
-
-    <header>
-        <h1>General Discussion Board</h1>
-    </header>
-
-    <main>
-
-        <section id="create-new-topic">
-            
-            <h2>Start a New Topic</h2>
-
-            <form id="new-topic-form" action="#">
-                
-                <fieldset>
-                    
-                    <legend>New Topic Details</legend>
-
-                    <label for="topic-subject">Topic Subject:</label>
-                    <input type="text" id="topic-subject" name="subject" required>
-
-                    <label for="topic-message">Main Message:</label>
-                    <textarea id="topic-message" name="message" rows="6" required></textarea>
-
-                    <button id="create-topic" type="submit">Create Topic</button>
-
-                </fieldset>
-
-            </form>
-
-        </section>
-
-
-        <section id="existing-topics-list">
-            
-            <h2>All Topics</h2>
-            
-            <div class="topics-wrapper">
-                
-                <article>
-                    <h3><a href="topic-detail.html">Question about CSS Flexbox</a></h3>
-                    
-                    <footer>
-                        <p>Posted by: Ahmed Ali on 2026-04-21</p>
+                        Posted by: Student Name on 2026-04-21
                     </footer>
 
                     <div class="actions">
-                        <button type="button">Edit</button>
-                        <button type="button">Delete</button>
+                        <button>Edit</button>
+                        <button>Delete</button>
                     </div>
                 </article>
 
+                <!-- Topic 2 -->
                 <article>
-                    <h3><a href="topic-detail.html">How to improve SEO on my site?</a></h3>
+                    <h3>
+                        <a href="topic-detail.html">How to use JavaScript events?</a>
+                    </h3>
+
                     <footer>
-                        <p>Posted by: Sara Mansour on 2026-04-20</p>
+                        Posted by: Hessa on 2026-04-20
                     </footer>
+
                     <div class="actions">
-                        <button type="button">Edit</button>
-                        <button type="button">Delete</button>
+                        <button>Edit</button>
+                        <button>Delete</button>
                     </div>
                 </article>
-            
-            </div>
 
+                <!-- Topic 3 -->
+                <article>
+                    <h3>
+                        <a href="topic-detail.html">Best way to design responsive pages</a>
+                    </h3>
+
+                    <footer>
+                        Posted by: Student Name on 2026-04-19
+                    </footer>
+
+                    <div class="actions">
+                        <button>Edit</button>
+                        <button>Delete</button>
+                    </div>
+                </article>
+
+            </div>
         </section>
 
     </main>
