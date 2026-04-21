@@ -1,134 +1,168 @@
 // --- Global Data Store ---
-let currentTopicId = null;
-let currentReplies = [];
+let topics = [];
 
-// --- Element Selections ---
-const topicSubject = document.getElementById("topic-subject");
-const opMessage = document.getElementById("op-message");
-const opFooter = document.getElementById("op-footer");
-const replyListContainer = document.getElementById("reply-list-container");
-const replyForm = document.getElementById("reply-form");
-const newReplyText = document.getElementById("new-reply");
+const form = document.getElementById("new-topic-form");
+const topicListContainer = document.getElementById("topic-list-container");
 
-// --- Functions ---
-
-function getTopicIdFromURL() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("id");
-}
-
-function renderOriginalPost(topic) {
-  topicSubject.textContent = topic.subject;
-  opMessage.textContent = topic.message;
-  opFooter.textContent = Posted by: ${topic.author} on ${topic.created_at};
-}
-
-function createReplyArticle(reply) {
+// ----------------------------
+// Create Topic Article
+// ----------------------------
+function createTopicArticle(topic) {
   const article = document.createElement("article");
 
-  const p = document.createElement("p");
-  p.textContent = reply.text;
+  const h3 = document.createElement("h3");
+  const link = document.createElement("a");
+
+  // FIX: لازم backticks + اسم الملف الصحيح
+  link.href = topic.html?id=${topic.id};
+  link.textContent = topic.subject;
+
+  h3.appendChild(link);
 
   const footer = document.createElement("footer");
-  footer.textContent = Posted by: ${reply.author} on ${reply.created_at};
+  footer.textContent =
+    Posted by: ${topic.author} on ${topic.created_at};
 
   const div = document.createElement("div");
 
-  const btn = document.createElement("button");
-  btn.textContent = "Delete";
-  btn.classList.add("delete-reply-btn");
-  btn.dataset.id = reply.id;
+  const editBtn = document.createElement("button");
+  editBtn.textContent = "Edit";
+  editBtn.classList.add("edit-btn");
+  editBtn.dataset.id = topic.id;
 
-  div.appendChild(btn);
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "Delete";
+  deleteBtn.classList.add("delete-btn");
+  deleteBtn.dataset.id = topic.id;
 
-  article.appendChild(p);
+  div.appendChild(editBtn);
+  div.appendChild(deleteBtn);
+
+  article.appendChild(h3);
   article.appendChild(footer);
   article.appendChild(div);
 
   return article;
 }
 
-function renderReplies() {
-  replyListContainer.innerHTML = "";
+// ----------------------------
+// Render Topics
+// ----------------------------
+function renderTopics() {
+  topicListContainer.innerHTML = "";
 
-  currentReplies.forEach((reply) => {
-    const article = createReplyArticle(reply);
-    replyListContainer.appendChild(article);
+  topics.forEach((topic) => {
+    topicListContainer.appendChild(createTopicArticle(topic));
   });
 }
 
-async function handleAddReply(event) {
+// ----------------------------
+// Create / Update Topic
+// ----------------------------
+async function handleCreateTopic(event) {
   event.preventDefault();
 
-  const replyText = newReplyText.value.trim();
-  if (!replyText) return;
+  const subject = document.getElementById("topic-subject").value.trim();
+  const message = document.getElementById("topic-message").value.trim();
 
-  const response = await fetch("./api/index.php?action=reply", {
+  if (!subject || !message) return;
+
+  const btn = document.getElementById("create-topic");
+  const editId = btn.dataset.editId;
+
+  // UPDATE MODE
+  if (editId) {
+    const res = await fetch("./api/index.php", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: editId,
+        subject,
+        message,
+      }),
+    });
+
+    const result = await res.json();
+
+    if (result.success) {
+      topics = topics.map((t) =>
+        t.id == editId ? { ...t, subject, message } : t
+      );
+
+      btn.textContent = "Create Topic";
+      delete btn.dataset.editId;
+
+      form.reset();
+      renderTopics();
+    }
+    return;
+  }
+
+  // CREATE MODE
+  const response = await fetch("./api/index.php", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      topic_id: parseInt(currentTopicId),
+      subject,
+      message,
       author: "Student",
-      text: replyText,
     }),
   });
 
   const result = await response.json();
 
   if (result.success) {
-    currentReplies.push(result.data);
-    renderReplies();
-    newReplyText.value = "";
+    // API يرجع id فقط أحياناً، نعيد تحميل
+    await loadAndInitialize();
+    form.reset();
   }
 }
 
-async function handleReplyListClick(event) {
-  if (event.target.classList.contains("delete-reply-btn")) {
-    const id = event.target.dataset.id;
+// ----------------------------
+// Delete / Edit Click
+// ----------------------------
+async function handleTopicListClick(event) {
+  const id = event.target.dataset.id;
 
-    const response = await fetch(
-      ./api/index.php?action=delete_reply&id=${id},
-      { method: "DELETE" }
-    );
+  if (event.target.classList.contains("delete-btn")) {
+    const response = await fetch(./api/index.php?id=${id}, {
+      method: "DELETE",
+    });
 
     const result = await response.json();
 
     if (result.success) {
-      currentReplies = currentReplies.filter((reply) => reply.id != id);
-      renderReplies();
+      topics = topics.filter((t) => t.id != id);
+      renderTopics();
     }
   }
-}
 
-async function initializePage() {
-  currentTopicId = getTopicIdFromURL();
+  if (event.target.classList.contains("edit-btn")) {
+    const topic = topics.find((t) => t.id == id);
 
-  if (!currentTopicId) {
-    topicSubject.textContent = "Topic not found.";
-    return;
-  }
+    document.getElementById("topic-subject").value = topic.subject;
+    document.getElementById("topic-message").value = topic.message;
 
-  const [topicRes, repliesRes] = await Promise.all([
-    fetch(./api/index.php?id=${currentTopicId}),
-    fetch(./api/index.php?action=replies&topic_id=${currentTopicId}),
-  ]);
-
-  const topicData = await topicRes.json();
-  const repliesData = await repliesRes.json();
-
-  if (topicData.success) {
-    renderOriginalPost(topicData.data);
-
-    currentReplies = repliesData.success ? repliesData.data : [];
-    renderReplies();
-
-    replyForm.addEventListener("submit", handleAddReply);
-    replyListContainer.addEventListener("click", handleReplyListClick);
-  } else {
-    topicSubject.textContent = "Topic not found.";
+    const btn = document.getElementById("create-topic");
+    btn.textContent = "Update Topic";
+    btn.dataset.editId = id;
   }
 }
 
-initializePage();
+// ----------------------------
+// Load
+// ----------------------------
+async function loadAndInitialize() {
+  const response = await fetch("./api/index.php");
+  const result = await response.json();
+
+  if (result.success) {
+    topics = result.data;
+    renderTopics();
+  }
+
+  form.addEventListener("submit", handleCreateTopic);
+  topicListContainer.addEventListener("click", handleTopicListClick);
+}
+
+loadAndInitialize();
