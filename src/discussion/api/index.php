@@ -1,4 +1,14 @@
 <?php
+/**
+ * Discussion Board API
+ *
+ * RESTful API for CRUD operations on discussion topics and their replies.
+ * Uses PDO to interact with the MySQL database defined in schema.sql.
+ */
+
+// ============================================================================
+// HEADERS AND INITIALIZATION
+// ============================================================================
 
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
@@ -10,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// FIXED: _DIR_ instead of DIR
 require_once _DIR_ . '/../../common/db.php';
 
 $db = getDBConnection();
@@ -23,10 +34,14 @@ $action  = $_GET['action']   ?? null;
 $id      = $_GET['id']       ?? null;
 $topicId = $_GET['topic_id'] ?? null;
 
+
+// ============================================================================
+// TOPICS FUNCTIONS
+// ============================================================================
+
 function getAllTopics(PDO $db): void
 {
     $query = "SELECT id, subject, message, author, created_at FROM topics";
-
     $params = [];
 
     if (!empty($_GET['search'])) {
@@ -98,6 +113,7 @@ function updateTopic(PDO $db, array $data): void
 
     $stmt = $db->prepare("SELECT id FROM topics WHERE id = ?");
     $stmt->execute([$data['id']]);
+
     if (!$stmt->fetch()) {
         sendResponse(['success' => false], 404);
     }
@@ -139,6 +155,7 @@ function deleteTopic(PDO $db, $id): void
 
     $stmt = $db->prepare("SELECT id FROM topics WHERE id = ?");
     $stmt->execute([$id]);
+
     if (!$stmt->fetch()) {
         sendResponse(['success' => false], 404);
     }
@@ -152,6 +169,11 @@ function deleteTopic(PDO $db, $id): void
         sendResponse(['success' => false], 500);
     }
 }
+
+
+// ============================================================================
+// REPLIES FUNCTIONS
+// ============================================================================
 
 function getRepliesByTopicId(PDO $db, $topicId): void
 {
@@ -179,18 +201,24 @@ function createReply(PDO $db, array $data): void
 
     $stmt = $db->prepare("SELECT id FROM topics WHERE id = ?");
     $stmt->execute([$data['topic_id']]);
+
     if (!$stmt->fetch()) {
         sendResponse(['success' => false], 404);
     }
 
     $stmt = $db->prepare("INSERT INTO replies (topic_id, text, author) VALUES (?, ?, ?)");
-    $stmt->execute([$data['topic_id'], trim($data['text']), trim($data['author'])]);
+    $stmt->execute([
+        $data['topic_id'],
+        trim($data['text']),
+        trim($data['author'])
+    ]);
 
     if ($stmt->rowCount() > 0) {
         $id = $db->lastInsertId();
 
         $stmt = $db->prepare("SELECT id, topic_id, text, author, created_at FROM replies WHERE id = ?");
         $stmt->execute([$id]);
+
         $reply = $stmt->fetch(PDO::FETCH_ASSOC);
 
         sendResponse(['success' => true, 'id' => $id, 'data' => $reply], 201);
@@ -207,6 +235,7 @@ function deleteReply(PDO $db, $replyId): void
 
     $stmt = $db->prepare("SELECT id FROM replies WHERE id = ?");
     $stmt->execute([$replyId]);
+
     if (!$stmt->fetch()) {
         sendResponse(['success' => false], 404);
     }
@@ -220,6 +249,11 @@ function deleteReply(PDO $db, $replyId): void
         sendResponse(['success' => false], 500);
     }
 }
+
+
+// ============================================================================
+// MAIN REQUEST ROUTER
+// ============================================================================
 
 try {
 
@@ -260,10 +294,16 @@ try {
 } catch (PDOException $e) {
     error_log($e->getMessage());
     sendResponse(['success' => false], 500);
+
 } catch (Exception $e) {
     error_log($e->getMessage());
     sendResponse(['success' => false], 500);
 }
+
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
 
 function sendResponse(array $data, int $statusCode = 200): void
 {
