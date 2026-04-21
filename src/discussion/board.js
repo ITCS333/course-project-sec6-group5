@@ -64,7 +64,7 @@ async function handleCreateTopic(event) {
     .getElementById("create-topic")
     .dataset.editId;
 
-  /
+  
   if (editId) {
     await handleUpdateTopic(parseInt(editId), { subject, message });
 
@@ -76,7 +76,7 @@ async function handleCreateTopic(event) {
     return;
   }
 
-  // ➕ CREATE MODE
+  
   const response = await fetch("./api/index.php", {
     method: "POST",
     headers: {
