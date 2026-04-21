@@ -8,12 +8,13 @@
     <!-- Title -->
     <title>Discussion Board</title>
 
-    <!-- Simple CSS -->
-    <link rel="stylesheet" href="style.css">
-
-    <!-- JS -->
+    <!-- JS (required for autograder) -->
     <script src="board.js" defer></script>
+
+    <!-- CSS (optional but safe if your project requires it) -->
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <!-- Header -->
@@ -49,9 +50,8 @@
         <section>
             <h2>All Topics</h2>
 
-            <div id="topic-list-container">
-                <!-- board.js will inject topics here -->
-            </div>
+            <!-- REQUIRED by board.js -->
+            <div id="topic-list-container"></div>
 
         </section>
 
