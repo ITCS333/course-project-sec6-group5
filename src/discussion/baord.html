@@ -116,3 +116,85 @@
 
 </body>
 </html>
+[9:14 PM, 4/21/2026] Hessaa: <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Discussion Board</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+</head>
+<body>
+
+    <header>
+        <h1>General Discussion Board</h1>
+    </header>
+
+    <main>
+
+        <section id="create-new-topic">
+            
+            <h2>Start a New Topic</h2>
+
+            <form id="new-topic-form" action="#">
+                
+                <fieldset>
+                    
+                    <legend>New Topic Details</legend>
+
+                    <label for="topic-subject">Topic Subject:</label>
+                    <input type="text" id="topic-subject" name="subject" required>
+
+                    <label for="topic-message">Main Message:</label>
+                    <textarea id="topic-message" name="message" rows="6" required></textarea>
+
+                    <button id="create-topic" type="submit">Create Topic</button>
+
+                </fieldset>
+
+            </form>
+
+        </section>
+
+
+        <section id="existing-topics-list">
+            
+            <h2>All Topics</h2>
+            
+            <div class="topics-wrapper">
+                
+                <article>
+                    <h3><a href="topic-detail.html">Question about CSS Flexbox</a></h3>
+                    
+                    <footer>
+                        <p>Posted by: Ahmed Ali on 2026-04-21</p>
+                    </footer>
+
+                    <div class="actions">
+                        <button type="button">Edit</button>
+                        <button type="button">Delete</button>
+                    </div>
+                </article>
+
+                <article>
+                    <h3><a href="topic-detail.html">How to improve SEO on my site?</a></h3>
+                    <footer>
+                        <p>Posted by: Sara Mansour on 2026-04-20</p>
+                    </footer>
+                    <div class="actions">
+                        <button type="button">Edit</button>
+                        <button type="button">Delete</button>
+                    </div>
+                </article>
+            
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+</html>
