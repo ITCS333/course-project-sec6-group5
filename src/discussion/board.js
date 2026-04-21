@@ -1,11 +1,33 @@
-// --- Global Data Store ---
+/*
+  Requirement: Make the "Discussion Board" page interactive.
+
+  Instructions:
+  1. This file is already linked to board.html via:
+         <script src="board.js" defer></script>
+
+  2. In board.html:
+     - The new-topic form has id="new-topic-form".
+     - The topic list container has id="topic-list-container".
+
+  3. Implement the TODOs below.
+
+  API base URL: ./api/index.php
+  All requests and responses use JSON.
+  Successful list response shape: { success: true, data: [ ...topic objects ] }
+  Each topic object shape (from the topics table):
+    {
+      id:         number,
+      subject:    string,
+      message:    string,
+      author:     string,
+      created_at: string
+    }
+*/
+
 let topics = [];
 
-// --- Element Selections ---
 const form = document.getElementById("new-topic-form");
 const topicListContainer = document.getElementById("topic-list-container");
-
-// --- Functions ---
 
 function createTopicArticle(topic) {
   const article = document.createElement("article");
@@ -64,7 +86,6 @@ async function handleCreateTopic(event) {
     .getElementById("create-topic")
     .dataset.editId;
 
-  
   if (editId) {
     await handleUpdateTopic(parseInt(editId), { subject, message });
 
@@ -76,7 +97,6 @@ async function handleCreateTopic(event) {
     return;
   }
 
-  
   const response = await fetch("./api/index.php", {
     method: "POST",
     headers: {
@@ -124,7 +144,6 @@ async function handleUpdateTopic(id, fields) {
 async function handleTopicListClick(event) {
   const id = event.target.dataset.id;
 
-  // 🗑 DELETE
   if (event.target.classList.contains("delete-btn")) {
     const response = await fetch(
       ./api/index.php?id=${id},
@@ -139,7 +158,6 @@ async function handleTopicListClick(event) {
     }
   }
 
-  // 
   if (event.target.classList.contains("edit-btn")) {
     const topic = topics.find((t) => t.id == id);
 
@@ -165,5 +183,4 @@ async function loadAndInitialize() {
   topicListContainer.addEventListener("click", handleTopicListClick);
 }
 
-// --- Initial Page Load ---
 loadAndInitialize();
