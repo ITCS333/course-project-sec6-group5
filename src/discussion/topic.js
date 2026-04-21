@@ -20,8 +20,7 @@ function getTopicIdFromURL() {
 function renderOriginalPost(topic) {
   topicSubject.textContent = topic.subject;
   opMessage.textContent = topic.message;
-  opFooter.textContent =
-    "Posted by: " + topic.author + " on " + topic.created_at;
+  opFooter.textContent = Posted by: ${topic.author} on ${topic.created_at};
 }
 
 function createReplyArticle(reply) {
@@ -31,8 +30,7 @@ function createReplyArticle(reply) {
   p.textContent = reply.text;
 
   const footer = document.createElement("footer");
-  footer.textContent =
-    "Posted by: " + reply.author + " on " + reply.created_at;
+  footer.textContent = Posted by: ${reply.author} on ${reply.created_at};
 
   const div = document.createElement("div");
 
@@ -98,9 +96,7 @@ async function handleReplyListClick(event) {
     const result = await response.json();
 
     if (result.success) {
-      currentReplies = currentReplies.filter(
-        (reply) => reply.id != id
-      );
+      currentReplies = currentReplies.filter((reply) => reply.id != id);
       renderReplies();
     }
   }
@@ -135,5 +131,4 @@ async function initializePage() {
   }
 }
 
-// --- Initial Page Load ---
 initializePage();
