@@ -270,7 +270,6 @@ async function loadAndInitialize() {
   tableBody.addEventListener("click", handleTableClick);
 }
   
-}
 
 // --- Initial Page Load ---
 loadAndInitialize();
