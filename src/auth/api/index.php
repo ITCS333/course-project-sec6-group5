@@ -11,7 +11,7 @@
 // TODO: Start a PHP session using session_start()
 // This must be called before any output is sent to the browser
 // Sessions allow us to store user data across multiple pages
-
+session_start();
 
 // --- Set Response Headers ---
 // TODO: Set the Content-Type header to 'application/json'
@@ -20,6 +20,7 @@
 
 // TODO: (Optional) Set CORS headers if your frontend and backend are on different domains
 // You'll need headers for Access-Control-Allow-Origin, Methods, and Headers
+header('Content-Type: application/json');
 
 
 // --- Check Request Method ---
@@ -27,16 +28,24 @@
 // Use the $_SERVER superglobal to check the REQUEST_METHOD
 // If the request is not POST, return an error response and exit
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid request method'
+    ]);
+    exit;
+}
 
 // --- Get POST Data ---
 // TODO: Retrieve the raw POST data
 // The Fetch API sends JSON data in the request body
 // Use file_get_contents with 'php://input' to read the raw request body
-
+$rawData = file_get_contents("php://input");
 
 // TODO: Decode the JSON data into a PHP associative array
 // Use json_decode with the second parameter set to true
 
+$data = json_decode($rawData, true);
 
 // TODO: Extract the email and password from the decoded data
 // Check if both 'email' and 'password' keys exist in the array
@@ -45,17 +54,41 @@
 
 // TODO: Store the email and password in variables
 // Trim any whitespace from the email
-
+if (!isset($data['email']) || !isset($data['password'])) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Email and password are required'
+    ]);
+    exit;
+}
 
 // --- Server-Side Validation (Optional but Recommended) ---
 // TODO: Validate the email format on the server side
 // Use the appropriate filter function for email validation
 // If invalid, return an error response and exit
 
+$email = trim($data['email']);
+$password = $data['password'];
+
+// --- Server Validation ---
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid email format'
+    ]);
+    exit;
+}
 
 // TODO: Validate the password length (minimum 8 characters)
 // If invalid, return an error response and exit
 
+if (strlen($password) < 8) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Password must be at least 8 characters'
+    ]);
+    exit;
+}
 
 // --- Database Connection ---
 // TODO: Get the database connection using the provided function
@@ -164,6 +197,57 @@
     // TODO: Exit the script
 
 
+
 // --- End of Script ---
+    require_once 'db.php';
+
+try {
+    $pdo = getDBConnection();
+
+    $sql = "SELECT id, name, email, password, is_admin FROM users WHERE email = :email";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['email' => $email]);
+
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user && password_verify($password, $user['password'])) {
+
+        // Session
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_name'] = $user['name'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['is_admin'] = $user['is_admin'];
+        $_SESSION['logged_in'] = true;
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Login successful',
+            'user' => [
+                'id' => $user['id'],
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'is_admin' => $user['is_admin']
+            ]
+        ]);
+        exit;
+
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid email or password'
+        ]);
+        exit;
+    }
+
+} catch (PDOException $e) {
+
+    error_log($e->getMessage());
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Something went wrong'
+    ]);
+    exit;
+}
 
 ?>
