@@ -13,7 +13,7 @@ function createTopicArticle(topic) {
   const h3 = document.createElement("h3");
   const link = document.createElement("a");
 
-  // FIX: لازم backticks + اسم الملف الصحيح
+
   link.href = topic.html?id=${topic.id};
   link.textContent = topic.subject;
 
