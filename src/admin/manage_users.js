@@ -95,7 +95,7 @@ function renderTable(userArray) {
  */
 function handleChangePassword(event) {
   // ... your implementation here ...
- event.preventDefault();
+   event.preventDefault();
 
   const current = document.getElementById("current-password").value;
   const newPass = document.getElementById("new-password").value;
@@ -116,7 +116,7 @@ function handleChangePassword(event) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: 1, 
+        id: 1,
         current_password: current,
         new_password: newPass
       })
