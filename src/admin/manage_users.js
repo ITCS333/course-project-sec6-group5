@@ -278,16 +278,15 @@ const term = searchInput.value.toLowerCase();
 function handleSort(event) {
   // ... your implementation here ...
 const index = event.currentTarget.cellIndex;
-
   const map = ["name", "email", "is_admin"];
   const key = map[index];
 
   let dir = event.currentTarget.dataset.sortDir;
 
-  if (!dir || dir === "desc") {
-    dir = "asc";
-  } else {
+  if (dir === "asc") {
     dir = "desc";
+  } else {
+    dir = "asc";
   }
 
   event.currentTarget.dataset.sortDir = dir;
