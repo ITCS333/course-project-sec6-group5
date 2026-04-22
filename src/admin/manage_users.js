@@ -46,8 +46,7 @@ const tableHeaders = document.querySelectorAll("#user-table thead th");
  */
 function createUserRow(user) {
   // ... your implementation here ...
-
-const tr = document.createElement("tr");
+ const tr = document.createElement("tr");
 
   tr.innerHTML = `
     <td>${user.name}</td>
@@ -155,7 +154,7 @@ event.preventDefault();
  */
 function handleAddUser(event) {
   // ... your implementation here ...
- event.preventDefault();
+event.preventDefault();
 
   const name = document.getElementById("user-name").value;
   const email = document.getElementById("user-email").value;
@@ -208,53 +207,58 @@ function handleAddUser(event) {
  *    - (Optional) Populate an edit form or prompt with the user's current data
  *      and send a PUT request to '../api/index.php' with the updated fields.
  */
-function handleTableClick(event) {
-  // ... your implementation here ...
-const id = event.target.dataset.id;
+async function handleTableClick(event) {
+  const id = event.target.dataset.id;
 
   // DELETE
   if (event.target.classList.contains("delete-btn")) {
-
-    const res = await fetch(`../api/index.php?id=${id}`, {
-      method: "DELETE"
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      users = users.filter(u => u.id != id);
-      renderTable(users);
-    } else {
-      alert(data.message);
-    }
-  }
-
-  // EDIT (simple prompt)
-  if (event.target.classList.contains("edit-btn")) {
-
-    const user = users.find(u => u.id == id);
-
-    const newName = prompt("Edit name:", user.name);
-
-    if (newName) {
-
-      const res = await fetch("../api/index.php", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, name: newName })
+    try {
+      const res = await fetch(`../api/index.php?id=${id}`, {
+        method: "DELETE"
       });
 
       const data = await res.json();
 
       if (data.success) {
-        await loadUsersAndInitialize();
+        users = users.filter(u => u.id != id);
+        renderTable(users);
       } else {
         alert(data.message);
       }
+    } catch (err) {
+      alert("Server error");
     }
   }
 
+  // EDIT
+  if (event.target.classList.contains("edit-btn")) {
+    const user = users.find(u => u.id == id);
+    if (!user) return;
+
+    const newName = prompt("Edit name:", user.name);
+
+    if (newName) {
+      try {
+        const res = await fetch("../api/index.php", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, name: newName })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          await loadUsersAndInitialize();
+        } else {
+          alert(data.message);
+        }
+      } catch (err) {
+        alert("Server error");
+      }
+    }
+  }
 }
+
 
 /**
  * TODO: Implement the handleSearch function.
@@ -313,7 +317,6 @@ function handleSort(event) {
   event.currentTarget.dataset.sortDir = dir;
 
   users.sort((a, b) => {
-
     let valA = a[key];
     let valB = b[key];
 
@@ -350,7 +353,7 @@ function handleSort(event) {
  */
 async function loadUsersAndInitialize() {
   // ... your implementation here ...
- try {
+try {
     const res = await fetch("../api/index.php");
 
     if (!res.ok) {
@@ -377,8 +380,8 @@ async function loadUsersAndInitialize() {
   } catch (err) {
     alert("Server error");
   }
-
 }
+
 
 // --- Initial Page Load ---
 loadUsersAndInitialize();
