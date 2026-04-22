@@ -95,7 +95,7 @@ function renderTable(userArray) {
  */
 async function handleChangePassword(event) {
   // ... your implementation here ...
-    event.preventDefault();
+  event.preventDefault();
 
   const current = document.getElementById("current-password").value;
   const newPass = document.getElementById("new-password").value;
@@ -126,7 +126,10 @@ async function handleChangePassword(event) {
 
     if (res.ok) {
       alert("Password updated successfully!");
-      document.getElementById("password-form").reset();
+
+      document.getElementById("current-password").value = "";
+      document.getElementById("new-password").value = "";
+      document.getElementById("confirm-password").value = "";
     } else {
       alert(data.message);
     }
@@ -279,10 +282,14 @@ const index = event.currentTarget.cellIndex;
   const map = ["name", "email", "is_admin"];
   const key = map[index];
 
-  let dir = event.currentTarget.dataset.sortDir || "asc";
+  let dir = event.currentTarget.dataset.sortDir;
 
-  // toggle direction
-  dir = dir === "asc" ? "desc" : "asc";
+  if (!dir || dir === "desc") {
+    dir = "asc";
+  } else {
+    dir = "desc";
+  }
+
   event.currentTarget.dataset.sortDir = dir;
 
   users.sort((a, b) => {
