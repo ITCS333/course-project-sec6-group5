@@ -122,8 +122,9 @@ function getUsers($db) {
     // TODO: Fetch all rows as an associative array.
 
     // TODO: Call sendResponse() with the array and HTTP status 200.
-global $search, $sort, $order;
-
+$search = $GLOBALS['search'];
+$sort = $GLOBALS['sort'];
+$order = $GLOBALS['order'];
     $query = "SELECT id, name, email, is_admin, created_at FROM users";
     $params = [];
 
@@ -344,9 +345,8 @@ $stmt = $db->prepare($query);
 
 $stmt->execute($params);
 
-sendResponse("Updated successfully");
+sendResponse("Updated successfully", 200);
 }
-
 
 /**
  * Function: Delete a user by primary key.
@@ -512,7 +512,9 @@ function sendResponse($data, $statusCode = 200) {
 
     // TODO: Call exit to stop further execution.
 http_response_code($statusCode);
-  if ($statusCode < 400) {
+    header("Content-Type: application/json");
+
+    if ($statusCode < 400) {
         echo json_encode([
             "success" => true,
             "data" => $data
@@ -526,7 +528,6 @@ http_response_code($statusCode);
 
     exit;
 }
-
 
 /**
  * Validates an email address.
