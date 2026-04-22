@@ -85,7 +85,11 @@ async function handleChangePassword(event) {
 
     if (data.success) {
       alert("Password updated successfully!");
-      passwordForm.reset();
+     passwordForm.reset();
+
+document.getElementById("current-password").value = "";
+document.getElementById("new-password").value = "";
+document.getElementById("confirm-password").value = "";
     } else {
       alert(data.message);
     }
@@ -205,7 +209,7 @@ function handleSearch() {
  * TODO: Implement the handleSort function.
  */
 function handleSort(event) {
-  const index = event.currentTarget.cellIndex;
+   const index = event.currentTarget.cellIndex;
   const map = ["name", "email", "is_admin"];
   const key = map[index];
 
@@ -222,7 +226,9 @@ function handleSort(event) {
         ? valA.localeCompare(valB)
         : valB.localeCompare(valA);
     } else {
-      return dir === "asc" ? valA - valB : valB - valA;
+      return dir === "asc"
+        ? Number(valA) - Number(valB)
+        : Number(valB) - Number(valA);
     }
   });
 
@@ -235,16 +241,19 @@ function handleSort(event) {
 async function loadUsersAndInitialize() {
   try {
     const res = await fetch("../api/index.php");
+
     if (!res.ok) {
       console.error("Failed to fetch users");
       return;
     }
 
     const data = await res.json();
+
     if (data.success) {
       users = data.data;
       renderTable(users);
     }
+
   } catch (err) {
     console.error("Load error:", err);
   }
@@ -252,8 +261,7 @@ async function loadUsersAndInitialize() {
 
 // --- Event Listeners Setup ---
 // These are outside the function to ensure they only attach once.
-passwordForm.addEventListener("submit", handleChangePassword);
-addUserForm.addEventListener("submit", handleAddUser);
+
 userTableBody.addEventListener("click", handleTableClick);
 searchInput.addEventListener("input", handleSearch);
 tableHeaders.forEach(th => th.addEventListener("click", handleSort));
