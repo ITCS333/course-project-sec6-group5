@@ -208,6 +208,21 @@ function handleAddUser(event) {
  */
 function handleTableClick(event) {
   // ... your implementation here ...
+const id = event.target.dataset.id;
+
+  if (event.target.classList.contains("delete-btn")) {
+    fetch(`../api/index.php?id=${id}`, {
+      method: "DELETE"
+    }).then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          users = users.filter(u => u.id != id);
+          renderTable(users);
+        } else {
+          alert(data.message);
+        }
+      });
+  }
 }
 
 /**
@@ -223,6 +238,22 @@ function handleTableClick(event) {
  */
 function handleSearch(event) {
   // ... your implementation here ...
+const term = searchInput.value.toLowerCase();
+
+  if (!term) {
+    renderTable(users);
+    return;
+  }
+
+  const filtered = users.filter(user =>
+    user.name.toLowerCase().includes(term) ||
+    user.email.toLowerCase().includes(term)
+  );
+
+  renderTable(filtered);
+}
+
+
 }
 
 /**
@@ -244,8 +275,34 @@ function handleSearch(event) {
  */
 function handleSort(event) {
   // ... your implementation here ...
-}
+onst index = event.currentTarget.cellIndex;
 
+  const map = ["name", "email", "is_admin"];
+  const key = map[index];
+
+  let dir = event.currentTarget.dataset.sortDir || "asc";
+
+  // toggle direction
+  dir = dir === "asc" ? "desc" : "asc";
+  event.currentTarget.dataset.sortDir = dir;
+
+  users.sort((a, b) => {
+    let valA = a[key];
+    let valB = b[key];
+
+    if (key === "name" || key === "email") {
+      return dir === "asc"
+        ? valA.localeCompare(valB)
+        : valB.localeCompare(valA);
+    } else {
+      return dir === "asc"
+        ? valA - valB
+        : valB - valA;
+    }
+  });
+
+  renderTable(users);
+}
 /**
  * TODO: Implement the loadUsersAndInitialize function.
  * This function must be async.
@@ -265,6 +322,33 @@ function handleSort(event) {
  */
 async function loadUsersAndInitialize() {
   // ... your implementation here ...
+ try {
+    const res = await fetch("../api/index.php");
+
+    if (!res.ok) {
+      alert("Failed to load users");
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.success) {
+      users = data.data;
+      renderTable(users);
+    }
+
+    addUserForm.addEventListener("submit", handleAddUser);
+    passwordForm.addEventListener("submit", handleChangePassword);
+    userTableBody.addEventListener("click", handleTableClick);
+    searchInput.addEventListener("input", handleSearch);
+
+    tableHeaders.forEach(th =>
+      th.addEventListener("click", handleSort)
+    );
+
+  } catch (err) {
+    alert("Server error");
+  }
 }
 
 // --- Initial Page Load ---
