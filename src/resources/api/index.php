@@ -1,36 +1,41 @@
 <?php
 /**
- * Course Resources API - Final Clean Version
+ * Course Resources API - Final Version
+ * This file handles CRUD operations for resources and comments.
  */
 
-// 1. الإعدادات والترويسات (Headers)
+// ============================================================================
+// 1. HEADERS AND INITIALIZATION
+// ============================================================================
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
+// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// 2. الاتصال بقاعدة البيانات (تم حذف التكرار)
+// Include database connection
 require_once './config/Database.php';
 $database = new Database();
 $db = $database->getConnection();
 
-// 3. جلب بيانات الطلب
+// Get request method and input data
 $method = $_SERVER['REQUEST_METHOD'];
 $rawData = file_get_contents('php://input');
 $data = json_decode($rawData, true);
 
-// 4. تحليل المعايير (Query Parameters)
+// Parse query parameters
 $action = $_GET['action'] ?? null;
 $id = $_GET['id'] ?? null;
 $resource_id = $_GET['resource_id'] ?? null;
 $comment_id = $_GET['comment_id'] ?? null;
 
 // ============================================================================
-// RESOURCE FUNCTIONS
+// 2. RESOURCE FUNCTIONS
 // ============================================================================
 
 function getAllResources($db) {
@@ -63,6 +68,7 @@ function getResourceById($db, $resourceId) {
     if (!$resourceId || !is_numeric($resourceId)) {
         sendResponse(['success' => false, 'message' => 'Invalid Resource ID.'], 400);
     }
+
     $stmt = $db->prepare("SELECT id, title, description, link, created_at FROM resources WHERE id = ?");
     $stmt->execute([$resourceId]);
     $resource = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -78,18 +84,19 @@ function createResource($db, $data) {
     if (empty($data['title']) || empty($data['link'])) {
         sendResponse(['success' => false, 'message' => 'Title and link are required.'], 400);
     }
-    $title = trim($data['title']);
-    $link = trim($data['link']);
-    $description = isset($data['description']) ? trim($data['description']) : '';
 
-    if (!filter_var($link, FILTER_VALIDATE_URL)) {
+    $title = sanitizeInput($data['title']);
+    $link = trim($data['link']);
+    $description = isset($data['description']) ? sanitizeInput($data['description']) : '';
+
+    if (!validateUrl($link)) {
         sendResponse(['success' => false, 'message' => 'Invalid link format.'], 400);
     }
 
     $stmt = $db->prepare("INSERT INTO resources (title, description, link) VALUES (?, ?, ?)");
     if ($stmt->execute([$title, $description, $link])) {
         sendResponse([
-            'success' => true, 
+            'success' => true,
             'message' => 'Resource created successfully.',
             'id' => $db->lastInsertId()
         ], 201);
@@ -101,27 +108,21 @@ function updateResource($db, $data) {
     if (empty($data['id'])) {
         sendResponse(['success' => false, 'message' => 'Resource ID is required.'], 400);
     }
-    $resourceId = $data['id'];
-    
-    $checkStmt = $db->prepare("SELECT id FROM resources WHERE id = ?");
-    $checkStmt->execute([$resourceId]);
-    if (!$checkStmt->fetch()) {
-        sendResponse(['success' => false, 'message' => 'Resource not found.'], 404);
-    }
 
+    $resourceId = $data['id'];
     $updateFields = [];
     $updateValues = [];
 
     if (isset($data['title'])) {
         $updateFields[] = "title = ?";
-        $updateValues[] = trim($data['title']);
+        $updateValues[] = sanitizeInput($data['title']);
     }
     if (isset($data['description'])) {
         $updateFields[] = "description = ?";
-        $updateValues[] = trim($data['description']);
+        $updateValues[] = sanitizeInput($data['description']);
     }
     if (isset($data['link'])) {
-        if (!filter_var($data['link'], FILTER_VALIDATE_URL)) {
+        if (!validateUrl($data['link'])) {
             sendResponse(['success' => false, 'message' => 'Invalid link format.'], 400);
         }
         $updateFields[] = "link = ?";
@@ -134,8 +135,8 @@ function updateResource($db, $data) {
 
     $sql = "UPDATE resources SET " . implode(', ', $updateFields) . " WHERE id = ?";
     $updateValues[] = $resourceId;
+    
     $stmt = $db->prepare($sql);
-
     if ($stmt->execute($updateValues)) {
         sendResponse(['success' => true, 'message' => 'Resource updated successfully.']);
     } else {
@@ -147,9 +148,10 @@ function deleteResource($db, $resourceId) {
     if (!$resourceId || !is_numeric($resourceId)) {
         sendResponse(['success' => false, 'message' => 'Invalid Resource ID.'], 400);
     }
+
     $stmt = $db->prepare("DELETE FROM resources WHERE id = ?");
     $stmt->execute([$resourceId]);
-    
+
     if ($stmt->rowCount() > 0) {
         sendResponse(['success' => true, 'message' => 'Resource deleted successfully.']);
     } else {
@@ -158,7 +160,7 @@ function deleteResource($db, $resourceId) {
 }
 
 // ============================================================================
-// COMMENT FUNCTIONS
+// 3. COMMENT FUNCTIONS
 // ============================================================================
 
 function getCommentsByResourceId($db, $resourceId) {
@@ -167,17 +169,16 @@ function getCommentsByResourceId($db, $resourceId) {
     }
     $stmt = $db->prepare("SELECT id, resource_id, author, text, created_at FROM comments_resource WHERE resource_id = ? ORDER BY created_at ASC");
     $stmt->execute([$resourceId]);
-    $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    sendResponse(['success' => true, 'data' => $comments]);
+    sendResponse(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
 }
 
 function createComment($db, $data) {
     if (empty($data['resource_id']) || empty($data['author']) || empty($data['text'])) {
-        sendResponse(['success' => false, 'message' => 'All fields are required.'], 400);
+        sendResponse(['success' => false, 'message' => 'Resource ID, author, and text are required.'], 400);
     }
-    
+
     $stmt = $db->prepare("INSERT INTO comments_resource (resource_id, author, text) VALUES (?, ?, ?)");
-    if ($stmt->execute([$data['resource_id'], trim($data['author']), trim($data['text'])])) {
+    if ($stmt->execute([$data['resource_id'], sanitizeInput($data['author']), sanitizeInput($data['text'])])) {
         sendResponse([
             'success' => true,
             'message' => 'Comment added successfully.',
@@ -193,7 +194,7 @@ function deleteComment($db, $commentId) {
     }
     $stmt = $db->prepare("DELETE FROM comments_resource WHERE id = ?");
     $stmt->execute([$commentId]);
-    
+
     if ($stmt->rowCount() > 0) {
         sendResponse(['success' => true, 'message' => 'Comment deleted successfully.']);
     } else {
@@ -202,7 +203,7 @@ function deleteComment($db, $commentId) {
 }
 
 // ============================================================================
-// MAIN REQUEST ROUTER
+// 4. MAIN REQUEST ROUTER
 // ============================================================================
 
 try {
@@ -219,18 +220,18 @@ try {
         updateResource($db, $data);
     } 
     elseif ($method === 'DELETE') {
-        if ($action === 'delete_comment') deleteComment($db, $comment_id);
+        if ($action === 'delete_comment' || $action === 'comments') deleteComment($db, $comment_id);
         else deleteResource($db, $id);
     } 
     else {
         sendResponse(['success' => false, 'message' => 'Method Not Allowed'], 405);
     }
 } catch (Exception $e) {
-    sendResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+    sendResponse(['success' => false, 'message' => 'System Error: ' . $e->getMessage()], 500);
 }
 
 // ============================================================================
-// HELPER FUNCTIONS
+// 5. HELPER FUNCTIONS
 // ============================================================================
 
 function sendResponse($data, $statusCode = 200) {
@@ -238,4 +239,13 @@ function sendResponse($data, $statusCode = 200) {
     echo json_encode($data);
     exit;
 }
+
+function validateUrl($url) {
+    return (bool)filter_var($url, FILTER_VALIDATE_URL);
+}
+
+function sanitizeInput($data) {
+    return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
+}
+
 ?>
