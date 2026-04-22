@@ -27,9 +27,9 @@ const tableHeaders = document.querySelectorAll("#user-table thead th");
  * TODO: Implement the createUserRow function.
  */
 function createUserRow(user) {
-    const tr = document.createElement("tr");
+   const tr = document.createElement("tr");
 
-    tr.innerHTML =
+    tr.innerHTML = `
         <td>${user.name}</td>
         <td>${user.email}</td>
         <td>${user.is_admin == 1 ? "Yes" : "No"}</td>
@@ -37,7 +37,7 @@ function createUserRow(user) {
             <button class="edit-btn" data-id="${user.id}">Edit</button>
             <button class="delete-btn" data-id="${user.id}">Delete</button>
         </td>
-    ;
+    `;
 
     return tr;
 }
