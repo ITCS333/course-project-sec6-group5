@@ -208,7 +208,10 @@ function handleAddUser(event) {
  */
 function handleTableClick(event) {
   // ... your implementation here ...
-const id = event.target.dataset.id;
+const btn = event.target.closest("button");
+if (!btn) return;
+
+const id = btn.dataset.id;
 
   if (event.target.classList.contains("delete-btn")) {
     fetch(`../api/index.php?id=${id}`, {
@@ -252,10 +255,6 @@ const term = searchInput.value.toLowerCase();
 
   renderTable(filtered);
 }
-
-
-}
-
 /**
  * TODO: Implement the handleSort function.
  * This function is called when any <th> in the thead is clicked.
@@ -275,8 +274,7 @@ const term = searchInput.value.toLowerCase();
  */
 function handleSort(event) {
   // ... your implementation here ...
-onst index = event.currentTarget.cellIndex;
-
+const index = event.currentTarget.cellIndex;
   const map = ["name", "email", "is_admin"];
   const key = map[index];
 
