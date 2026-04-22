@@ -47,7 +47,7 @@ const tableHeaders = document.querySelectorAll("#user-table thead th");
 function createUserRow(user) {
   // ... your implementation here ...
 
- const tr = document.createElement("tr");
+const tr = document.createElement("tr");
 
   tr.innerHTML = `
     <td>${user.name}</td>
@@ -58,6 +58,7 @@ function createUserRow(user) {
       <button class="delete-btn" data-id="${user.id}">Delete</button>
     </td>
   `;
+
   return tr;
 }
 
@@ -95,7 +96,7 @@ function renderTable(userArray) {
  */
 function handleChangePassword(event) {
   // ... your implementation here ...
- event.preventDefault();
+event.preventDefault();
 
   const current = document.getElementById("current-password").value;
   const newPass = document.getElementById("new-password").value;
@@ -116,7 +117,7 @@ function handleChangePassword(event) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: 1, 
+        id: 1,
         current_password: current,
         new_password: newPass
       })
@@ -124,7 +125,7 @@ function handleChangePassword(event) {
 
     const data = await res.json();
 
-    if (res.ok) {
+    if (data.success) {
       alert("Password updated successfully!");
       passwordForm.reset();
     } else {
@@ -178,11 +179,12 @@ function handleAddUser(event) {
       body: JSON.stringify({ name, email, password, is_admin })
     });
 
-    if (res.status === 201) {
+    const data = await res.json();
+
+    if (data.success) {
       await loadUsersAndInitialize();
       addUserForm.reset();
     } else {
-      const data = await res.json();
       alert(data.message);
     }
 
@@ -208,6 +210,50 @@ function handleAddUser(event) {
  */
 function handleTableClick(event) {
   // ... your implementation here ...
+const id = event.target.dataset.id;
+
+  // DELETE
+  if (event.target.classList.contains("delete-btn")) {
+
+    const res = await fetch(`../api/index.php?id=${id}`, {
+      method: "DELETE"
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      users = users.filter(u => u.id != id);
+      renderTable(users);
+    } else {
+      alert(data.message);
+    }
+  }
+
+  // EDIT (simple prompt)
+  if (event.target.classList.contains("edit-btn")) {
+
+    const user = users.find(u => u.id == id);
+
+    const newName = prompt("Edit name:", user.name);
+
+    if (newName) {
+
+      const res = await fetch("../api/index.php", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, name: newName })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        await loadUsersAndInitialize();
+      } else {
+        alert(data.message);
+      }
+    }
+  }
+
 }
 
 /**
@@ -223,6 +269,19 @@ function handleTableClick(event) {
  */
 function handleSearch(event) {
   // ... your implementation here ...
+const term = searchInput.value.toLowerCase();
+
+  if (!term) {
+    renderTable(users);
+    return;
+  }
+
+  const filtered = users.filter(u =>
+    u.name.toLowerCase().includes(term) ||
+    u.email.toLowerCase().includes(term)
+  );
+
+  renderTable(filtered);
 }
 
 /**
@@ -244,6 +303,32 @@ function handleSearch(event) {
  */
 function handleSort(event) {
   // ... your implementation here ...
+ const index = event.currentTarget.cellIndex;
+
+  const map = ["name", "email", "is_admin"];
+  const key = map[index];
+
+  let dir = event.currentTarget.dataset.sortDir || "asc";
+  dir = dir === "asc" ? "desc" : "asc";
+  event.currentTarget.dataset.sortDir = dir;
+
+  users.sort((a, b) => {
+
+    let valA = a[key];
+    let valB = b[key];
+
+    if (key === "name" || key === "email") {
+      return dir === "asc"
+        ? valA.localeCompare(valB)
+        : valB.localeCompare(valA);
+    } else {
+      return dir === "asc"
+        ? valA - valB
+        : valB - valA;
+    }
+  });
+
+  renderTable(users);
 }
 
 /**
@@ -265,6 +350,34 @@ function handleSort(event) {
  */
 async function loadUsersAndInitialize() {
   // ... your implementation here ...
+ try {
+    const res = await fetch("../api/index.php");
+
+    if (!res.ok) {
+      alert("Failed to load users");
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.success) {
+      users = data.data;
+      renderTable(users);
+    }
+
+    passwordForm.addEventListener("submit", handleChangePassword);
+    addUserForm.addEventListener("submit", handleAddUser);
+    userTableBody.addEventListener("click", handleTableClick);
+    searchInput.addEventListener("input", handleSearch);
+
+    tableHeaders.forEach(th =>
+      th.addEventListener("click", handleSort)
+    );
+
+  } catch (err) {
+    alert("Server error");
+  }
+
 }
 
 // --- Initial Page Load ---
