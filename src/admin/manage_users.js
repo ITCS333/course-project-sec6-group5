@@ -54,7 +54,7 @@ function renderTable(userArray) {
  * TODO: Implement the handleChangePassword function.
  */
 async function handleChangePassword(event) {
-  event.preventDefault();
+   event.preventDefault();
 
   const current = document.getElementById("current-password").value;
   const newPass = document.getElementById("new-password").value;
@@ -75,7 +75,7 @@ async function handleChangePassword(event) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: 1, // Default admin ID for assignment
+        id: 1,
         current_password: current,
         new_password: newPass
       })
@@ -85,14 +85,14 @@ async function handleChangePassword(event) {
 
     if (data.success) {
       alert("Password updated successfully!");
-     passwordForm.reset();
 
-document.getElementById("current-password").value = "";
-document.getElementById("new-password").value = "";
-document.getElementById("confirm-password").value = "";
+      // reset form
+      passwordForm.reset();
+
     } else {
       alert(data.message);
     }
+
   } catch (err) {
     alert("Server error");
   }
@@ -234,7 +234,6 @@ function handleSort(event) {
 
   renderTable(users);
 }
-
 /**
  * TODO: Implement the loadUsersAndInitialize function.
  */
@@ -261,10 +260,12 @@ async function loadUsersAndInitialize() {
 
 // --- Event Listeners Setup ---
 // These are outside the function to ensure they only attach once.
-
 userTableBody.addEventListener("click", handleTableClick);
 searchInput.addEventListener("input", handleSearch);
 tableHeaders.forEach(th => th.addEventListener("click", handleSort));
+
+passwordForm.addEventListener("submit", handleChangePassword);
+addUserForm.addEventListener("submit", handleAddUser);
 
 // Initial page load
 loadUsersAndInitialize();
