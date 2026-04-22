@@ -44,18 +44,17 @@ function createUserRow(user) {
  * TODO: Implement the renderTable function.
  */
 function renderTable(userArray) {
- userTableBody.innerHTML = "";
+userTableBody.innerHTML = "";
 
   userArray.forEach(user => {
     userTableBody.appendChild(createUserRow(user));
   });
 }
-
 /**
  * TODO: Implement the handleChangePassword function.
  */
 async function handleChangePassword(event) {
-   event.preventDefault();
+  event.preventDefault();
 
   const current = document.getElementById("current-password").value;
   const newPass = document.getElementById("new-password").value;
@@ -76,7 +75,7 @@ async function handleChangePassword(event) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: 1,
+        id: 1, 
         current_password: current,
         new_password: newPass
       })
@@ -91,14 +90,12 @@ async function handleChangePassword(event) {
       document.getElementById("new-password").value = "";
       document.getElementById("confirm-password").value = "";
     } else {
-      alert(data.message);
+      alert(data.message || "Update failed");
     }
-
   } catch (err) {
     alert("Server error");
   }
 }
-
 /**
  * TODO: Implement the handleAddUser function.
  */
@@ -211,7 +208,7 @@ function handleSearch() {
  */
 function handleSort(event) {
 const th = event.currentTarget;
-  const key = th.dataset.key;
+  const key = th.dataset.key; 
 
   let dir = th.dataset.sortDir === "asc" ? "desc" : "asc";
   th.dataset.sortDir = dir;
@@ -221,12 +218,12 @@ const th = event.currentTarget;
     let valB = b[key];
 
     if (key === "name" || key === "email") {
-      return dir === "asc"
-        ? valA.localeCompare(valB)
+      return dir === "asc" 
+        ? valA.localeCompare(valB) 
         : valB.localeCompare(valA);
     } else {
-      return dir === "asc"
-        ? Number(valA) - Number(valB)
+      return dir === "asc" 
+        ? Number(valA) - Number(valB) 
         : Number(valB) - Number(valA);
     }
   });
@@ -237,17 +234,19 @@ const th = event.currentTarget;
  * TODO: Implement the loadUsersAndInitialize function.
  */
 async function loadUsersAndInitialize() {
- try {
+try {
     const res = await fetch("../api/index.php");
+   
+    if (!res.ok) throw new Error("Failed to fetch users");
+
     const data = await res.json();
 
     if (data.success) {
       users = data.data;
       renderTable(users);
     }
-
   } catch (err) {
-    console.error(err);
+    console.error("Error loading users:", err);
   }
 }
 passwordForm.addEventListener("submit", handleChangePassword);
