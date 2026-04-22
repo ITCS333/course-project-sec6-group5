@@ -179,8 +179,7 @@ if (!$user) {
     sendResponse("User not found", 404);
 }
 
-sendResponse($user);
-
+sendResponse($user, 200);
 }
 
 
@@ -258,7 +257,7 @@ function createUser($db, $data) {
     ]);
 
     // 9) response
-    sendResponse(["id" => $db->lastInsertId()], 201);
+sendResponse(["id" => (int)$db->lastInsertId()], 201);
 }
 
 
@@ -378,8 +377,7 @@ if (!$id) sendResponse("ID required", 400);
     $stmt = $db->prepare("DELETE FROM users WHERE id = :id");
     $stmt->execute([":id" => $id]);
 
-    sendResponse("Deleted successfully");
-
+sendResponse("Deleted successfully", 200);
 }
 /**
  * Function: Change a user's password.
@@ -437,7 +435,7 @@ function changePassword($db, $data) {
         ":id" => $data['id']
     ]);
 
-    sendResponse("Password updated");
+sendResponse("Password updated", 200);
 }
 
 
@@ -512,7 +510,7 @@ function sendResponse($data, $statusCode = 200) {
 
     // TODO: Call exit to stop further execution.
 http_response_code($statusCode);
-    header("Content-Type: application/json");
+      http_response_code($statusCode);
 
     if ($statusCode < 400) {
         echo json_encode([
