@@ -124,69 +124,11 @@ async function handleChangePassword(event) {
 
     const data = await res.json();
 
-    if (res.ok) {
-      alert("Password updated successfully!");
+    alert("Password updated successfully!");
 
-      document.getElementById("current-password").value = "";
-      document.getElementById("new-password").value = "";
-      document.getElementById("confirm-password").value = "";
-    } else {
-      alert(data.message);
-    }
-
-  } catch (err) {
-    alert("Server error");
-  }
-}
-/**
- * TODO: Implement the handleAddUser function.
- * This function is called when the "Add User" form is submitted.
- * It should:
- * 1. Prevent the form's default submission behaviour.
- * 2. Get the values from "user-name", "user-email", "default-password", and "is-admin".
- * 3. Perform client-side validation:
- *    - If name, email, or password are empty, show an alert: "Please fill out all required fields."
- *    - If password is less than 8 characters, show an alert: "Password must be at least 8 characters."
- * 4. If validation passes, send a POST request to '../api/index.php'
- *    with a JSON body: { name, email, password, is_admin }
- * 5. On success (HTTP 201), re-fetch the full user list by calling loadUsersAndInitialize()
- *    so the table reflects the new record from the database.
- * 6. Clear the form inputs on success.
- * 7. On failure, show the error message returned by the API.
- */
-async function handleAddUser(event) {
-  // ... your implementation here ...
- event.preventDefault();
-
-  const name = document.getElementById("user-name").value;
-  const email = document.getElementById("user-email").value;
-  const password = document.getElementById("default-password").value;
-  const is_admin = document.getElementById("is-admin").value;
-
-  if (!name || !email || !password) {
-    alert("Please fill out all required fields.");
-    return;
-  }
-
-  if (password.length < 8) {
-    alert("Password must be at least 8 characters.");
-    return;
-  }
-
-  try {
-    const res = await fetch("../api/index.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, is_admin })
-    });
-
-    if (res.status === 201) {
-      await loadUsersAndInitialize();
-      addUserForm.reset();
-    } else {
-      const data = await res.json();
-      alert(data.message);
-    }
+    document.getElementById("current-password").value = "";
+    document.getElementById("new-password").value = "";
+    document.getElementById("confirm-password").value = "";
 
   } catch (err) {
     alert("Server error");
