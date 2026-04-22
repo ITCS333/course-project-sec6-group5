@@ -80,19 +80,17 @@ async function handleChangePassword(event) {
         new_password: newPass
       })
     });
+const data = await res.json();
 
-    const data = await res.json();
+if (data.success) {
+  alert("Password updated successfully!");
 
-    if (data.success) {
-      alert("Password updated successfully!");
-
-      // reset form
-      passwordForm.reset();
-
-    } else {
-      alert(data.message);
-    }
-
+  document.getElementById("current-password").value = "";
+  document.getElementById("new-password").value = "";
+  document.getElementById("confirm-password").value = "";
+} else {
+  alert(data.message);
+}
   } catch (err) {
     alert("Server error");
   }
@@ -209,8 +207,8 @@ function handleSearch() {
  * TODO: Implement the handleSort function.
  */
 function handleSort(event) {
-   const index = event.currentTarget.cellIndex;
-  const map = ["name", "email", "is_admin"];
+const th = event.currentTarget;
+const key = th.dataset.key;  const map = ["name", "email", "is_admin"];
   const key = map[index];
 
   let dir = event.currentTarget.dataset.sortDir || "asc";
@@ -252,7 +250,8 @@ async function loadUsersAndInitialize() {
       users = data.data;
       renderTable(users);
     }
-
+passwordForm.addEventListener("submit", handleChangePassword);
+addUserForm.addEventListener("submit", handleAddUser);
   } catch (err) {
     console.error("Load error:", err);
   }
@@ -264,8 +263,6 @@ userTableBody.addEventListener("click", handleTableClick);
 searchInput.addEventListener("input", handleSearch);
 tableHeaders.forEach(th => th.addEventListener("click", handleSort));
 
-passwordForm.addEventListener("submit", handleChangePassword);
-addUserForm.addEventListener("submit", handleAddUser);
 
 // Initial page load
 loadUsersAndInitialize();
