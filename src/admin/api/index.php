@@ -380,7 +380,7 @@ if (!$id) sendResponse("ID required", 400);
 
     sendResponse("Deleted successfully");
 
-
+}
 /**
  * Function: Change a user's password.
  * Method: POST with ?action=change_password
