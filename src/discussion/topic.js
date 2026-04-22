@@ -17,6 +17,8 @@ function getTopicIdFromURL() {
 }
 
 function renderOriginalPost(topic) {
+  if (!topicSubject || !opMessage || !opFooter) return;
+
   topicSubject.textContent = topic.subject;
   opMessage.textContent = topic.message;
   opFooter.textContent = `Posted by: ${topic.author} on ${topic.created_at}`;
@@ -49,6 +51,8 @@ function createReplyArticle(reply) {
 }
 
 function renderReplies() {
+  if (!replyListContainer) return;
+
   replyListContainer.innerHTML = "";
 
   currentReplies.forEach((reply) => {
@@ -59,34 +63,42 @@ function renderReplies() {
 async function handleAddReply(event) {
   event.preventDefault();
 
+  if (!newReplyText) return;
+
   const replyText = newReplyText.value.trim();
   if (!replyText) return;
 
-  const response = await fetch("./api/index.php?action=reply", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      topic_id: Number(currentTopicId),
-      author: "Student",
-      text: replyText,
-    }),
-  });
+  try {
+    const response = await fetch("./api/index.php?action=reply", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        topic_id: Number(currentTopicId),
+        author: "Student",
+        text: replyText,
+      }),
+    });
 
-  const result = await response.json();
+    const result = await response.json();
 
-  if (result.success) {
-    currentReplies.push(result.data);
-    renderReplies();
-    newReplyText.value = "";
+    if (result.success) {
+      currentReplies.push(result.data);
+      renderReplies();
+      newReplyText.value = "";
+    }
+  } catch (error) {
+    console.error("Error adding reply:", error);
   }
 }
 
 async function handleReplyListClick(event) {
-  if (event.target.classList.contains("delete-reply-btn")) {
-    const id = event.target.dataset.id;
+  if (!event.target.classList.contains("delete-reply-btn")) return;
 
+  const id = event.target.dataset.id;
+
+  try {
     const response = await fetch(`./api/index.php?action=delete_reply&id=${id}`, {
       method: "DELETE",
     });
@@ -94,13 +106,28 @@ async function handleReplyListClick(event) {
     const result = await response.json();
 
     if (result.success) {
-      currentReplies = currentReplies.filter((reply) => String(reply.id) !== String(id));
+      currentReplies = currentReplies.filter(
+        (reply) => String(reply.id) !== String(id)
+      );
       renderReplies();
     }
+  } catch (error) {
+    console.error("Error deleting reply:", error);
   }
 }
 
 async function initializePage() {
+  if (
+    !topicSubject ||
+    !opMessage ||
+    !opFooter ||
+    !replyListContainer ||
+    !replyForm ||
+    !newReplyText
+  ) {
+    return;
+  }
+
   currentTopicId = getTopicIdFromURL();
 
   if (!currentTopicId) {
@@ -108,26 +135,33 @@ async function initializePage() {
     return;
   }
 
-  const [topicResponse, repliesResponse] = await Promise.all([
-    fetch(`./api/index.php?id=${currentTopicId}`),
-    fetch(`./api/index.php?action=replies&topic_id=${currentTopicId}`),
-  ]);
+  try {
+    const [topicResponse, repliesResponse] = await Promise.all([
+      fetch(`./api/index.php?id=${currentTopicId}`),
+      fetch(`./api/index.php?action=replies&topic_id=${currentTopicId}`),
+    ]);
 
-  const topicResult = await topicResponse.json();
-  const repliesResult = await repliesResponse.json();
+    const topicResult = await topicResponse.json();
+    const repliesResult = await repliesResponse.json();
 
-  currentReplies = repliesResult.success ? repliesResult.data : [];
+    currentReplies = repliesResult.success ? repliesResult.data : [];
 
-  if (topicResult.success) {
-    renderOriginalPost(topicResult.data);
-    renderReplies();
+    if (topicResult.success) {
+      renderOriginalPost(topicResult.data);
+      renderReplies();
 
-    replyForm.addEventListener("submit", handleAddReply);
-    replyListContainer.addEventListener("click", handleReplyListClick);
-  } else {
+      replyForm.addEventListener("submit", handleAddReply);
+      replyListContainer.addEventListener("click", handleReplyListClick);
+    } else {
+      topicSubject.textContent = "Topic not found.";
+    }
+  } catch (error) {
+    console.error("Error initializing topic page:", error);
     topicSubject.textContent = "Topic not found.";
   }
 }
 
 // --- Initial Page Load ---
-initializePage();
+if (topicSubject || replyForm || replyListContainer) {
+  initializePage();
+}
