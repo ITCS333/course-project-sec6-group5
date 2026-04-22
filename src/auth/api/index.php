@@ -89,6 +89,56 @@ if (strlen($password) < 8) {
     ]);
     exit;
 }
+   require_once 'db.php';
+
+try {
+    $pdo = getDBConnection();
+
+    $sql = "SELECT id, name, email, password, is_admin FROM users WHERE email = :email";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['email' => $email]);
+
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user && password_verify($password, $user['password'])) {
+
+        // Session
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_name'] = $user['name'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['is_admin'] = $user['is_admin'];
+        $_SESSION['logged_in'] = true;
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Login successful',
+            'user' => [
+                'id' => $user['id'],
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'is_admin' => $user['is_admin']
+            ]
+        ]);
+        exit;
+
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid email or password'
+        ]);
+        exit;
+    }
+
+} catch (PDOException $e) {
+
+    error_log($e->getMessage());
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Something went wrong'
+    ]);
+    exit;
+}
 
 // --- Database Connection ---
 // TODO: Get the database connection using the provided function
@@ -199,55 +249,5 @@ if (strlen($password) < 8) {
 
 
 // --- End of Script ---
-    require_once 'db.php';
-
-try {
-    $pdo = getDBConnection();
-
-    $sql = "SELECT id, name, email, password, is_admin FROM users WHERE email = :email";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['email' => $email]);
-
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($user && password_verify($password, $user['password'])) {
-
-        // Session
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_name'] = $user['name'];
-        $_SESSION['user_email'] = $user['email'];
-        $_SESSION['is_admin'] = $user['is_admin'];
-        $_SESSION['logged_in'] = true;
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Login successful',
-            'user' => [
-                'id' => $user['id'],
-                'name' => $user['name'],
-                'email' => $user['email'],
-                'is_admin' => $user['is_admin']
-            ]
-        ]);
-        exit;
-
-    } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Invalid email or password'
-        ]);
-        exit;
-    }
-
-} catch (PDOException $e) {
-
-    error_log($e->getMessage());
-
-    echo json_encode([
-        'success' => false,
-        'message' => 'Something went wrong'
-    ]);
-    exit;
-}
-
+ 
 ?>
