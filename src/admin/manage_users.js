@@ -27,9 +27,12 @@ let users = [];
 // TODO: Select the search input field with id="search-input".
 
 // TODO: Select all table header (th) elements inside the thead of id="user-table".
-
+const userTableBody = document.getElementById("user-table-body");
+const addUserForm = document.getElementById("add-user-form");
+const passwordForm = document.getElementById("password-form");
+const searchInput = document.getElementById("search-input");
+const tableHeaders = document.querySelectorAll("#user-table thead th");
 // --- Functions ---
-
 /**
  * TODO: Implement the createUserRow function.
  * This function takes a user object { id, name, email, is_admin } and returns a <tr> element.
@@ -43,6 +46,19 @@ let users = [];
  */
 function createUserRow(user) {
   // ... your implementation here ...
+
+ const tr = document.createElement("tr");
+
+  tr.innerHTML = `
+    <td>${user.name}</td>
+    <td>${user.email}</td>
+    <td>${user.is_admin == 1 ? "Yes" : "No"}</td>
+    <td>
+      <button class="edit-btn" data-id="${user.id}">Edit</button>
+      <button class="delete-btn" data-id="${user.id}">Delete</button>
+    </td>
+  `;
+  return tr;
 }
 
 /**
@@ -55,6 +71,11 @@ function createUserRow(user) {
  */
 function renderTable(userArray) {
   // ... your implementation here ...
+ userTableBody.innerHTML = "";
+
+  userArray.forEach(user => {
+    userTableBody.appendChild(createUserRow(user));
+  });
 }
 
 /**
@@ -74,6 +95,45 @@ function renderTable(userArray) {
  */
 function handleChangePassword(event) {
   // ... your implementation here ...
+ event.preventDefault();
+
+  const current = document.getElementById("current-password").value;
+  const newPass = document.getElementById("new-password").value;
+  const confirm = document.getElementById("confirm-password").value;
+
+  if (newPass !== confirm) {
+    alert("Passwords do not match.");
+    return;
+  }
+
+  if (newPass.length < 8) {
+    alert("Password must be at least 8 characters.");
+    return;
+  }
+
+  try {
+    const res = await fetch("../api/index.php?action=change_password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: 1, 
+        current_password: current,
+        new_password: newPass
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("Password updated successfully!");
+      passwordForm.reset();
+    } else {
+      alert(data.message);
+    }
+
+  } catch (err) {
+    alert("Server error");
+  }
 }
 
 /**
@@ -94,6 +154,41 @@ function handleChangePassword(event) {
  */
 function handleAddUser(event) {
   // ... your implementation here ...
+ event.preventDefault();
+
+  const name = document.getElementById("user-name").value;
+  const email = document.getElementById("user-email").value;
+  const password = document.getElementById("default-password").value;
+  const is_admin = document.getElementById("is-admin").value;
+
+  if (!name || !email || !password) {
+    alert("Please fill out all required fields.");
+    return;
+  }
+
+  if (password.length < 8) {
+    alert("Password must be at least 8 characters.");
+    return;
+  }
+
+  try {
+    const res = await fetch("../api/index.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, is_admin })
+    });
+
+    if (res.status === 201) {
+      await loadUsersAndInitialize();
+      addUserForm.reset();
+    } else {
+      const data = await res.json();
+      alert(data.message);
+    }
+
+  } catch (err) {
+    alert("Server error");
+  }
 }
 
 /**
