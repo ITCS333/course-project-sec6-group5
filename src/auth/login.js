@@ -42,8 +42,7 @@ const messageContainer = document.getElementById("message-container");
 function displayMessage(message, type) {
   // ... your implementation here ...
 messageContainer.textContent = message;
-  messageContainer.className = type;
-}
+messageContainer.className = "message-container " + type;}
 /**
  * TODO: Implement the isValidEmail function.
  * This function takes one argument:
@@ -123,7 +122,7 @@ event.preventDefault();
  */
 function setupLoginForm() {
   // ... your implementation here ...
- if (loginForm) {
+if (loginForm) {
     loginForm.addEventListener("submit", handleLogin);
   }
 }
