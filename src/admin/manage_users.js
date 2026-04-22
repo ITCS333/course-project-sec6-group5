@@ -124,15 +124,15 @@ async function handleChangePassword(event) {
 
     const data = await res.json();
 
-    if (res.ok) {
-      alert("Password updated successfully!");
+  if (res.ok) {
+  alert("Password updated successfully!");
 
-      document.getElementById("current-password").value = "";
-      document.getElementById("new-password").value = "";
-      document.getElementById("confirm-password").value = "";
-    } else {
-      alert(data.message);
-    }
+  document.getElementById("current-password").value = "";
+  document.getElementById("new-password").value = "";
+  document.getElementById("confirm-password").value = "";
+} else {
+  alert(data.message);
+}
 
   } catch (err) {
     alert("Server error");
@@ -176,7 +176,43 @@ function handleTableClick(event) {
       });
   }
 }
-/**
+
+function handleAddUser(event) {
+ event.preventDefault();
+
+  const name = document.getElementById("name");
+  const email = document.getElementById("email");
+  const password = document.getElementById("default-password");
+
+  if (!name.value || !email.value || !password.value) {
+    alert("Required fields are empty");
+    return;
+  }
+
+  fetch("../api/index.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: name.value,
+      email: email.value,
+      password: password.value
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("User added successfully!");
+
+      name.value = "";
+      email.value = "";
+      password.value = "";
+    } else {
+      alert(data.message);
+    }
+  })
+  .catch(() => alert("Server error"));
+}
+
  * TODO: Implement the handleSearch function.
  * This function is called on the "input" event of the searchInput.
  * It should:
@@ -272,7 +308,7 @@ const index = event.currentTarget.cellIndex;
  */
 async function loadUsersAndInitialize() {
   // ... your implementation here ...
- try {
+  try {
     const res = await fetch("../api/index.php");
 
     if (!res.ok) {
@@ -287,14 +323,15 @@ async function loadUsersAndInitialize() {
       renderTable(users);
     }
 
-    addUserForm.addEventListener("submit", handleAddUser);
     passwordForm.addEventListener("submit", handleChangePassword);
+    addUserForm.addEventListener("submit", handleAddUser);
+
     userTableBody.addEventListener("click", handleTableClick);
     searchInput.addEventListener("input", handleSearch);
 
-    tableHeaders.forEach(th =>
-      th.addEventListener("click", handleSort)
-    );
+    tableHeaders.forEach(th => {
+      th.addEventListener("click", handleSort);
+    });
 
   } catch (err) {
     alert("Server error");
