@@ -44,13 +44,12 @@ function createUserRow(user) {
  * TODO: Implement the renderTable function.
  */
 function renderTable(userArray) {
-  userTableBody.innerHTML = "";
+userTableBody.innerHTML = "";
 
   userArray.forEach(user => {
     userTableBody.appendChild(createUserRow(user));
   });
 }
-
 /**
  * TODO: Implement the handleChangePassword function.
  */
@@ -83,20 +82,20 @@ async function handleChangePassword(event) {
     });
 
     const data = await res.json();
-    if (data.success) {
-      alert("Password updated successfully!");
-      // تصحيح JS-13: تصفير الحقول بعد النجاح
-      document.getElementById("current-password").value = "";
-      document.getElementById("new-password").value = "";
-      document.getElementById("confirm-password").value = "";
-    } else {
+if (data.success) {
+    alert("Password updated successfully!");
+
+  document.getElementById("current-password").value = "";
+    document.getElementById("new-password").value = "";
+    document.getElementById("confirm-password").value = "";
+}
+   else {
       alert(data.message || "Update failed");
     }
   } catch (err) {
     alert("Server error");
   }
 }
-
 /**
  * TODO: Implement the handleAddUser function.
  */
@@ -208,10 +207,9 @@ function handleSearch() {
  * TODO: Implement the handleSort function.
  */
 function handleSort(event) {
-  const th = event.currentTarget;
+const th = event.currentTarget;
   const key = th.dataset.key;
 
-  // تصحيح JS-21: الفرز يبدأ تصاعدياً (asc) في أول ضغطة
   let dir = th.dataset.sortDir === "asc" ? "desc" : "asc";
   th.dataset.sortDir = dir;
 
@@ -224,6 +222,7 @@ function handleSort(event) {
         ? valA.localeCompare(valB)
         : valB.localeCompare(valA);
     } 
+ ( is_admin)
     else {
       return dir === "asc"
         ? Number(valA) - Number(valB)
@@ -233,13 +232,14 @@ function handleSort(event) {
 
   renderTable(users);
 }
-
 /**
  * TODO: Implement the loadUsersAndInitialize function.
  */
 async function loadUsersAndInitialize() {
+async function loadUsersAndInitialize() {
   try {
     const res = await fetch("../api/index.php");
+    
     if (!res.ok) throw new Error("Failed to fetch users");
 
     const data = await res.json();
@@ -256,11 +256,14 @@ async function loadUsersAndInitialize() {
     console.error(err);
   }
 }
+}
 
 // --- Event Listeners Setup ---
+// These are outside the function to ensure they only attach once.
 userTableBody.addEventListener("click", handleTableClick);
 searchInput.addEventListener("input", handleSearch);
 tableHeaders.forEach(th => th.addEventListener("click", handleSort));
+
 
 // Initial page load
 loadUsersAndInitialize();
