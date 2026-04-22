@@ -125,11 +125,12 @@ async function handleChangePassword(event) {
     const data = await res.json();
 
     if (res.ok) {
-      alert("Password updated successfully!");
+  alert("Password updated successfully!");
 
-      document.getElementById("current-password").value = "";
-      document.getElementById("new-password").value = "";
-      document.getElementById("confirm-password").value = "";
+  document.getElementById("current-password").value = "";
+  document.getElementById("new-password").value = "";
+  document.getElementById("confirm-password").value = "";
+}
     } else {
       alert(data.message);
     }
