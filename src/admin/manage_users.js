@@ -27,12 +27,9 @@ let users = [];
 // TODO: Select the search input field with id="search-input".
 
 // TODO: Select all table header (th) elements inside the thead of id="user-table".
-const userTableBody = document.getElementById("user-table-body");
-const addUserForm = document.getElementById("add-user-form");
-const passwordForm = document.getElementById("password-form");
-const searchInput = document.getElementById("search-input");
-const tableHeaders = document.querySelectorAll("#user-table thead th");
+
 // --- Functions ---
+
 /**
  * TODO: Implement the createUserRow function.
  * This function takes a user object { id, name, email, is_admin } and returns a <tr> element.
@@ -46,19 +43,6 @@ const tableHeaders = document.querySelectorAll("#user-table thead th");
  */
 function createUserRow(user) {
   // ... your implementation here ...
-
- const tr = document.createElement("tr");
-
-  tr.innerHTML = `
-    <td>${user.name}</td>
-    <td>${user.email}</td>
-    <td>${user.is_admin == 1 ? "Yes" : "No"}</td>
-    <td>
-      <button class="edit-btn" data-id="${user.id}">Edit</button>
-      <button class="delete-btn" data-id="${user.id}">Delete</button>
-    </td>
-  `;
-  return tr;
 }
 
 /**
@@ -71,11 +55,6 @@ function createUserRow(user) {
  */
 function renderTable(userArray) {
   // ... your implementation here ...
- userTableBody.innerHTML = "";
-
-  userArray.forEach(user => {
-    userTableBody.appendChild(createUserRow(user));
-  });
 }
 
 /**
@@ -93,50 +72,28 @@ function renderTable(userArray) {
  * 5. On success, show an alert: "Password updated successfully!" and clear all three inputs.
  * 6. On failure, show the error message returned by the API.
  */
-async function handleChangePassword(event) {
+function handleChangePassword(event) {
   // ... your implementation here ...
-  event.preventDefault();
-
-  const current = document.getElementById("current-password").value;
-  const newPass = document.getElementById("new-password").value;
-  const confirm = document.getElementById("confirm-password").value;
-
-  if (newPass !== confirm) {
-    alert("Passwords do not match.");
-    return;
-  }
-
-  if (newPass.length < 8) {
-    alert("Password must be at least 8 characters.");
-    return;
-  }
-
-  try {
-    const res = await fetch("../api/index.php?action=change_password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: 1,
-        current_password: current,
-        new_password: newPass
-      })
-    });
-
-    const data = await res.json();
-
-  if (res.ok) {
-  alert("Password updated successfully!");
-
-  document.getElementById("current-password").value = "";
-  document.getElementById("new-password").value = "";
-  document.getElementById("confirm-password").value = "";
-} else {
-  alert(data.message);
 }
 
-  } catch (err) {
-    alert("Server error");
-  }
+/**
+ * TODO: Implement the handleAddUser function.
+ * This function is called when the "Add User" form is submitted.
+ * It should:
+ * 1. Prevent the form's default submission behaviour.
+ * 2. Get the values from "user-name", "user-email", "default-password", and "is-admin".
+ * 3. Perform client-side validation:
+ *    - If name, email, or password are empty, show an alert: "Please fill out all required fields."
+ *    - If password is less than 8 characters, show an alert: "Password must be at least 8 characters."
+ * 4. If validation passes, send a POST request to '../api/index.php'
+ *    with a JSON body: { name, email, password, is_admin }
+ * 5. On success (HTTP 201), re-fetch the full user list by calling loadUsersAndInitialize()
+ *    so the table reflects the new record from the database.
+ * 6. Clear the form inputs on success.
+ * 7. On failure, show the error message returned by the API.
+ */
+function handleAddUser(event) {
+  // ... your implementation here ...
 }
 
 /**
@@ -156,63 +113,9 @@ async function handleChangePassword(event) {
  */
 function handleTableClick(event) {
   // ... your implementation here ...
- const btn = event.target.closest("button");
-  if (!btn) return;
-
-  const id = btn.dataset.id;
-
-  if (btn.classList.contains("delete-btn")) {
-    fetch(`../api/index.php?id=${id}`, {
-      method: "DELETE"
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          users = users.filter(u => u.id != id);
-          renderTable(users);
-        } else {
-          alert(data.message);
-        }
-      });
-  }
 }
 
-function handleAddUser(event) {
- event.preventDefault();
-
-  const name = document.getElementById("name");
-  const email = document.getElementById("email");
-  const password = document.getElementById("default-password");
-
-  if (!name.value || !email.value || !password.value) {
-    alert("Required fields are empty");
-    return;
-  }
-
-  fetch("../api/index.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: name.value,
-      email: email.value,
-      password: password.value
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      alert("User added successfully!");
-
-      name.value = "";
-      email.value = "";
-      password.value = "";
-    } else {
-      alert(data.message);
-    }
-  })
-  .catch(() => alert("Server error"));
-}
-
+/**
  * TODO: Implement the handleSearch function.
  * This function is called on the "input" event of the searchInput.
  * It should:
@@ -225,20 +128,8 @@ function handleAddUser(event) {
  */
 function handleSearch(event) {
   // ... your implementation here ...
-const term = searchInput.value.toLowerCase();
-
-  if (!term) {
-    renderTable(users);
-    return;
-  }
-
-  const filtered = users.filter(user =>
-    user.name.toLowerCase().includes(term) ||
-    user.email.toLowerCase().includes(term)
-  );
-
-  renderTable(filtered);
 }
+
 /**
  * TODO: Implement the handleSort function.
  * This function is called when any <th> in the thead is clicked.
@@ -258,37 +149,8 @@ const term = searchInput.value.toLowerCase();
  */
 function handleSort(event) {
   // ... your implementation here ...
-const index = event.currentTarget.cellIndex;
-  const map = ["name", "email", "is_admin"];
-  const key = map[index];
-
-  let dir = event.currentTarget.dataset.sortDir;
-
-  if (dir === "asc") {
-    dir = "desc";
-  } else {
-    dir = "asc";
-  }
-
-  event.currentTarget.dataset.sortDir = dir;
-
-  users.sort((a, b) => {
-    let valA = a[key];
-    let valB = b[key];
-
-    if (key === "is_admin") {
-      valA = Number(valA);
-      valB = Number(valB);
-      return dir === "asc" ? valA - valB : valB - valA;
-    }
-
-    return dir === "asc"
-      ? valA.localeCompare(valB)
-      : valB.localeCompare(valA);
-  });
-
-  renderTable(users);
 }
+
 /**
  * TODO: Implement the loadUsersAndInitialize function.
  * This function must be async.
@@ -308,34 +170,6 @@ const index = event.currentTarget.cellIndex;
  */
 async function loadUsersAndInitialize() {
   // ... your implementation here ...
-  try {
-    const res = await fetch("../api/index.php");
-
-    if (!res.ok) {
-      alert("Failed to load users");
-      return;
-    }
-
-    const data = await res.json();
-
-    if (data.success) {
-      users = data.data;
-      renderTable(users);
-    }
-
-    passwordForm.addEventListener("submit", handleChangePassword);
-    addUserForm.addEventListener("submit", handleAddUser);
-
-    userTableBody.addEventListener("click", handleTableClick);
-    searchInput.addEventListener("input", handleSearch);
-
-    tableHeaders.forEach(th => {
-      th.addEventListener("click", handleSort);
-    });
-
-  } catch (err) {
-    alert("Server error");
-  }
 }
 
 // --- Initial Page Load ---
