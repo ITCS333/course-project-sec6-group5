@@ -89,7 +89,13 @@ if (strlen($password) < 8) {
     ]);
     exit;
 }
-   require_once 'db.php';
+  
+
+// --- Database Connection ---
+// TODO: Get the database connection using the provided function
+// Assume getDBConnection() returns a PDO instance with error mode set to exception
+// The function is defined elsewhere (e.g., in a config file or db.php)
+ require_once 'db.php';
 
 try {
     $pdo = getDBConnection();
@@ -139,12 +145,6 @@ try {
     ]);
     exit;
 }
-
-// --- Database Connection ---
-// TODO: Get the database connection using the provided function
-// Assume getDBConnection() returns a PDO instance with error mode set to exception
-// The function is defined elsewhere (e.g., in a config file or db.php)
-
 
 // TODO: Wrap database operations in a try-catch block to handle PDO exceptions
 // This ensures you can return a proper JSON error response if something goes wrong
