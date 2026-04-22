@@ -134,8 +134,8 @@ global $search, $sort, $order;
 
     $allowedSort = ["name", "email", "is_admin"];
     if (in_array($sort, $allowedSort)) {
-        $order = ($order === "desc") ? "DESC" : "ASC";
-        $query .= " ORDER BY $sort $order";
+        $dir = ($order === "desc") ? "DESC" : "ASC";
+$query .= " ORDER BY $sort $dir";
     }
 
     $stmt = $db->prepare($query);
@@ -164,19 +164,21 @@ function getUserById($db, $id) {
 
     // TODO: If no row is found, call sendResponse() with an error message and HTTP 404.
     //       If found, call sendResponse() with the row and HTTP 200.
+if (!$id) {
+    sendResponse("ID required", 400);
+}
+
 $stmt = $db->prepare("SELECT id, name, email, is_admin, created_at FROM users WHERE id = :id");
-    $stmt->bindParam(":id", $id);
-    $stmt->execute();
+$stmt->bindParam(":id", $id);
+$stmt->execute();
 
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$user) {
-        sendResponse("User not found", 404);
-    }
+if (!$user) {
+    sendResponse("User not found", 404);
+}
 
-    sendResponse($user);
-
-
+sendResponse($user);
 
 }
 
@@ -215,7 +217,11 @@ function createUser($db, $data) {
 
     // TODO: If the insert succeeds, call sendResponse() with the new user's id and HTTP 201.
     //       If it fails, call sendResponse() with HTTP 500.
- if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
+    $data['name'] = sanitizeInput(trim($data['name']));
+    $data['email'] = sanitizeInput(trim($data['email']));
+    $data['password'] = trim($data['password']);
+
+    if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
         sendResponse("Missing fields", 400);
     }
 
@@ -228,14 +234,14 @@ function createUser($db, $data) {
     }
 
     $check = $db->prepare("SELECT id FROM users WHERE email = :email");
-    $check->bindParam(":email", $data['email']);
-    $check->execute();
+    $check->execute([":email" => $data['email']]);
 
     if ($check->fetch()) {
         sendResponse("Email already exists", 409);
     }
 
     $hash = password_hash($data['password'], PASSWORD_DEFAULT);
+
     $is_admin = isset($data['is_admin']) ? (int)$data['is_admin'] : 0;
 
     $stmt = $db->prepare("
@@ -250,10 +256,8 @@ function createUser($db, $data) {
         ":is_admin" => $is_admin
     ]);
 
+    // 9) response
     sendResponse(["id" => $db->lastInsertId()], 201);
-
-
-
 }
 
 
@@ -288,49 +292,59 @@ function updateUser($db, $data) {
     //       If no rows were affected, still return HTTP 200 (no change is not an error).
     //       If the query fails, call sendResponse() with HTTP 500.
 if (empty($data['id'])) {
-        sendResponse("ID required", 400);
+    sendResponse("ID required", 400);
+}
+
+$stmt = $db->prepare("SELECT * FROM users WHERE id = :id");
+$stmt->execute([":id" => $data['id']]);
+
+if (!$stmt->fetch()) {
+    sendResponse("User not found", 404);
+}
+
+$fields = [];
+$params = [":id" => $data['id']];
+
+if (!empty($data['name'])) {
+    $fields[] = "name = :name";
+    $params[':name'] = $data['name'];
+}
+
+if (!empty($data['email'])) {
+
+    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        sendResponse("Invalid email", 400);
     }
 
-    $stmt = $db->prepare("SELECT * FROM users WHERE id = :id");
-    $stmt->execute([":id" => $data['id']]);
+    $check = $db->prepare("SELECT id FROM users WHERE email = :email AND id != :id");
+    $check->execute([
+        ":email" => $data['email'],
+        ":id" => $data['id']
+    ]);
 
-    if (!$stmt->fetch()) {
-        sendResponse("User not found", 404);
+    if ($check->fetch()) {
+        sendResponse("Email already exists", 409);
     }
 
-    $fields = [];
-    $params = [":id" => $data['id']];
+    $fields[] = "email = :email";
+    $params[':email'] = $data['email'];
+}
 
-    if (!empty($data['name'])) {
-        $fields[] = "name = :name";
-        $params[':name'] = $data['name'];
-    }
+if (isset($data['is_admin'])) {
+    $fields[] = "is_admin = :is_admin";
+    $params[':is_admin'] = (int)$data['is_admin'];
+}
 
-    if (!empty($data['email'])) {
+if (!$fields) {
+sendResponse([], 200);
+}
 
-        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            sendResponse("Invalid email", 400);
-        }
+$query = "UPDATE users SET " . implode(", ", $fields) . " WHERE id = :id";
+$stmt = $db->prepare($query);
 
-        $fields[] = "email = :email";
-        $params[':email'] = $data['email'];
-    }
+$stmt->execute($params);
 
-    if (isset($data['is_admin'])) {
-        $fields[] = "is_admin = :is_admin";
-        $params[':is_admin'] = (int)$data['is_admin'];
-    }
-
-    if (!$fields) {
-        sendResponse("No changes", 200);
-    }
-
-    $query = "UPDATE users SET " . implode(", ", $fields) . " WHERE id = :id";
-    $stmt = $db->prepare($query);
-
-    $stmt->execute($params);
-
-    sendResponse("Updated successfully");
+sendResponse("Updated successfully");
 }
 
 
@@ -352,13 +366,19 @@ function deleteUser($db, $id) {
 
     // TODO: If successful, call sendResponse() with a success message and HTTP 200.
     //       If the query fails, call sendResponse() with HTTP 500.
- if (!$id) sendResponse("ID required", 400);
+if (!$id) sendResponse("ID required", 400);
+
+    $stmt = $db->prepare("SELECT id FROM users WHERE id = :id");
+    $stmt->execute([":id" => $id]);
+
+    if (!$stmt->fetch()) {
+        sendResponse("User not found", 404);
+    }
 
     $stmt = $db->prepare("DELETE FROM users WHERE id = :id");
     $stmt->execute([":id" => $id]);
 
     sendResponse("Deleted successfully");
-}
 
 
 /**
@@ -463,7 +483,7 @@ try {
     // TODO: Call sendResponse() with a generic "Database error" message and HTTP 500.
     //       Do NOT expose the raw exception message to the client.
       error_log($e->getMessage());
-    sendResponse("Database error", 500)
+    sendResponse("Database error", 500);
 } catch (Exception $e) {
     // TODO: Call sendResponse() with the exception message and HTTP 500.
     sendResponse($e->getMessage(), 500);
@@ -491,9 +511,8 @@ function sendResponse($data, $statusCode = 200) {
     //         json_encode(['success' => false, 'message' => $data])
 
     // TODO: Call exit to stop further execution.
- http_response_code($status);
-
-    if ($status < 400) {
+http_response_code($statusCode);
+  if ($statusCode < 400) {
         echo json_encode([
             "success" => true,
             "data" => $data
