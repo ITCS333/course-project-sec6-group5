@@ -37,6 +37,15 @@
 // Allow specific HTTP methods: GET, POST, PUT, DELETE, OPTIONS.
 // Allow specific headers: Content-Type, Authorization.
 
+// Headers + CORS
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 // TODO: Handle preflight OPTIONS request.
 // If the request method is OPTIONS, return HTTP 200 and exit.
@@ -49,6 +58,8 @@
 
 // TODO: Get the PDO database connection by calling getDBConnection().
 
+require_once "../config/db.php";
+$db = getDBConnection();
 
 // TODO: Read the HTTP request method from $_SERVER['REQUEST_METHOD'].
 
@@ -82,19 +93,6 @@
  *   - Validate the 'order' value; only accept 'asc' or 'desc'.
  */
 
-header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
-
-require_once "../config/db.php";
-
-$db = getDBConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 
 $raw = file_get_contents("php://input");
@@ -105,6 +103,7 @@ $action = $_GET['action'] ?? null;
 $search = $_GET['search'] ?? null;
 $sort = $_GET['sort'] ?? null;
 $order = $_GET['order'] ?? "asc";
+
 function getUsers($db) {
     // TODO: Build a SELECT query for id, name, email, is_admin, created_at.
     //       Do NOT select the password column.
@@ -122,9 +121,8 @@ function getUsers($db) {
     // TODO: Fetch all rows as an associative array.
 
     // TODO: Call sendResponse() with the array and HTTP status 200.
-$search = $GLOBALS['search'];
-$sort = $GLOBALS['sort'];
-$order = $GLOBALS['order'];
+global $search, $sort, $order;
+
     $query = "SELECT id, name, email, is_admin, created_at FROM users";
     $params = [];
 
@@ -136,14 +134,13 @@ $order = $GLOBALS['order'];
     $allowedSort = ["name", "email", "is_admin"];
     if (in_array($sort, $allowedSort)) {
         $dir = ($order === "desc") ? "DESC" : "ASC";
-$query .= " ORDER BY $sort $dir";
+        $query .= " ORDER BY $sort $dir";
     }
 
     $stmt = $db->prepare($query);
     $stmt->execute($params);
 
     sendResponse($stmt->fetchAll(PDO::FETCH_ASSOC));
-
 }
 
 
@@ -165,21 +162,16 @@ function getUserById($db, $id) {
 
     // TODO: If no row is found, call sendResponse() with an error message and HTTP 404.
     //       If found, call sendResponse() with the row and HTTP 200.
-if (!$id) {
-    sendResponse("ID required", 400);
-}
+ if (!$id) sendResponse("ID required", 400);
 
-$stmt = $db->prepare("SELECT id, name, email, is_admin, created_at FROM users WHERE id = :id");
-$stmt->bindParam(":id", $id);
-$stmt->execute();
+    $stmt = $db->prepare("SELECT id, name, email, is_admin, created_at FROM users WHERE id = :id");
+    $stmt->execute([":id" => $id]);
 
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$user) {
-    sendResponse("User not found", 404);
-}
+    if (!$user) sendResponse("User not found", 404);
 
-sendResponse($user, 200);
+    sendResponse($user);
 }
 
 
@@ -217,31 +209,30 @@ function createUser($db, $data) {
 
     // TODO: If the insert succeeds, call sendResponse() with the new user's id and HTTP 201.
     //       If it fails, call sendResponse() with HTTP 500.
-    $data['name'] = sanitizeInput(trim($data['name']));
-    $data['email'] = sanitizeInput(trim($data['email']));
-    $data['password'] = trim($data['password']);
-
-    if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
+ if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
         sendResponse("Missing fields", 400);
     }
 
-    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+    $name = sanitizeInput(trim($data['name']));
+    $email = sanitizeInput(trim($data['email']));
+    $password = trim($data['password']);
+
+    if (!validateEmail($email)) {
         sendResponse("Invalid email", 400);
     }
 
-    if (strlen($data['password']) < 8) {
+    if (strlen($password) < 8) {
         sendResponse("Password must be at least 8 characters", 400);
     }
 
+    // check duplicate
     $check = $db->prepare("SELECT id FROM users WHERE email = :email");
-    $check->execute([":email" => $data['email']]);
-
+    $check->execute([":email" => $email]);
     if ($check->fetch()) {
         sendResponse("Email already exists", 409);
     }
 
-    $hash = password_hash($data['password'], PASSWORD_DEFAULT);
-
+    $hash = password_hash($password, PASSWORD_DEFAULT);
     $is_admin = isset($data['is_admin']) ? (int)$data['is_admin'] : 0;
 
     $stmt = $db->prepare("
@@ -250,14 +241,13 @@ function createUser($db, $data) {
     ");
 
     $stmt->execute([
-        ":name" => $data['name'],
-        ":email" => $data['email'],
+        ":name" => $name,
+        ":email" => $email,
         ":password" => $hash,
         ":is_admin" => $is_admin
     ]);
 
-    // 9) response
-sendResponse(["id" => (int)$db->lastInsertId()], 201);
+    sendResponse(["id" => (int)$db->lastInsertId()], 201);
 }
 
 
@@ -291,61 +281,58 @@ function updateUser($db, $data) {
     // TODO: If successful, call sendResponse() with a success message and HTTP 200.
     //       If no rows were affected, still return HTTP 200 (no change is not an error).
     //       If the query fails, call sendResponse() with HTTP 500.
-if (empty($data['id'])) {
-    sendResponse("ID required", 400);
-}
 
-$stmt = $db->prepare("SELECT * FROM users WHERE id = :id");
-$stmt->execute([":id" => $data['id']]);
+    if (empty($data['id'])) sendResponse("ID required", 400);
 
-if (!$stmt->fetch()) {
-    sendResponse("User not found", 404);
-}
+    $stmt = $db->prepare("SELECT id FROM users WHERE id = :id");
+    $stmt->execute([":id" => $data['id']]);
 
-$fields = [];
-$params = [":id" => $data['id']];
+    if (!$stmt->fetch()) sendResponse("User not found", 404);
 
-if (!empty($data['name'])) {
-    $fields[] = "name = :name";
-    $params[':name'] = $data['name'];
-}
+    $fields = [];
+    $params = [":id" => $data['id']];
 
-if (!empty($data['email'])) {
-
-    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-        sendResponse("Invalid email", 400);
+    if (!empty($data['name'])) {
+        $fields[] = "name = :name";
+        $params[':name'] = sanitizeInput($data['name']);
     }
 
-    $check = $db->prepare("SELECT id FROM users WHERE email = :email AND id != :id");
-    $check->execute([
-        ":email" => $data['email'],
-        ":id" => $data['id']
-    ]);
+    if (!empty($data['email'])) {
 
-    if ($check->fetch()) {
-        sendResponse("Email already exists", 409);
+        if (!validateEmail($data['email'])) {
+            sendResponse("Invalid email", 400);
+        }
+
+        $check = $db->prepare("SELECT id FROM users WHERE email = :email AND id != :id");
+        $check->execute([
+            ":email" => $data['email'],
+            ":id" => $data['id']
+        ]);
+
+        if ($check->fetch()) {
+            sendResponse("Email already exists", 409);
+        }
+
+        $fields[] = "email = :email";
+        $params[':email'] = $data['email'];
     }
 
-    $fields[] = "email = :email";
-    $params[':email'] = $data['email'];
+    if (isset($data['is_admin'])) {
+        $fields[] = "is_admin = :is_admin";
+        $params[':is_admin'] = (int)$data['is_admin'];
+    }
+
+    if (!$fields) {
+        sendResponse("No changes made", 200);
+    }
+
+    $query = "UPDATE users SET " . implode(", ", $fields) . " WHERE id = :id";
+    $stmt = $db->prepare($query);
+    $stmt->execute($params);
+
+    sendResponse("Updated successfully");
 }
 
-if (isset($data['is_admin'])) {
-    $fields[] = "is_admin = :is_admin";
-    $params[':is_admin'] = (int)$data['is_admin'];
-}
-
-if (!$fields) {
-sendResponse([], 200);
-}
-
-$query = "UPDATE users SET " . implode(", ", $fields) . " WHERE id = :id";
-$stmt = $db->prepare($query);
-
-$stmt->execute($params);
-
-sendResponse("Updated successfully", 200);
-}
 
 /**
  * Function: Delete a user by primary key.
@@ -365,20 +352,20 @@ function deleteUser($db, $id) {
 
     // TODO: If successful, call sendResponse() with a success message and HTTP 200.
     //       If the query fails, call sendResponse() with HTTP 500.
-if (!$id) sendResponse("ID required", 400);
+ if (!$id) sendResponse("ID required", 400);
 
     $stmt = $db->prepare("SELECT id FROM users WHERE id = :id");
     $stmt->execute([":id" => $id]);
 
-    if (!$stmt->fetch()) {
-        sendResponse("User not found", 404);
-    }
+    if (!$stmt->fetch()) sendResponse("User not found", 404);
 
     $stmt = $db->prepare("DELETE FROM users WHERE id = :id");
     $stmt->execute([":id" => $id]);
 
-sendResponse("Deleted successfully", 200);
+    sendResponse("Deleted successfully");
 }
+
+
 /**
  * Function: Change a user's password.
  * Method: POST with ?action=change_password
@@ -419,9 +406,7 @@ function changePassword($db, $data) {
     $stmt->execute([":id" => $data['id']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$user) {
-        sendResponse("User not found", 404);
-    }
+    if (!$user) sendResponse("User not found", 404);
 
     if (!password_verify($data['current_password'], $user['password'])) {
         sendResponse("Wrong password", 401);
@@ -435,7 +420,7 @@ function changePassword($db, $data) {
         ":id" => $data['id']
     ]);
 
-sendResponse("Password updated", 200);
+    sendResponse("Password updated");
 }
 
 
@@ -448,19 +433,13 @@ try {
     if ($method === 'GET') {
         // TODO: If the 'id' query parameter is present and non-empty, call getUserById($db, $id).
         // TODO: Otherwise, call getUsers($db) (supports optional search/sort parameters).
-          if ($id) {
-            getUserById($db, $id);
-        } else {
-            getUsers($db);
-        }
+  if ($id) getUserById($db, $id);
+        else getUsers($db);
     } elseif ($method === 'POST') {
         // TODO: If the 'action' query parameter equals 'change_password', call changePassword($db, $data).
         // TODO: Otherwise, call createUser($db, $data).
-  if ($action === "change_password") {
-            changePassword($db, $data);
-        } else {
-            createUser($db, $data);
-        }
+ if ($action === "change_password") changePassword($db, $data);
+        else createUser($db, $data);
     } elseif ($method === 'PUT') {
         // TODO: Call updateUser($db, $data).
         //       The user id to update comes from the JSON body, not the query string.
@@ -473,14 +452,14 @@ try {
 
     } else {
         // TODO: Return HTTP 405 (Method Not Allowed) with a JSON error message.
-           sendResponse("Method not allowed", 405);
+            sendResponse("Method not allowed", 405);
     }
 
 } catch (PDOException $e) {
     // TODO: Log the error (e.g. error_log($e->getMessage())).
     // TODO: Call sendResponse() with a generic "Database error" message and HTTP 500.
     //       Do NOT expose the raw exception message to the client.
-      error_log($e->getMessage());
+ error_log($e->getMessage());
     sendResponse("Database error", 500);
 } catch (Exception $e) {
     // TODO: Call sendResponse() with the exception message and HTTP 500.
@@ -510,22 +489,16 @@ function sendResponse($data, $statusCode = 200) {
 
     // TODO: Call exit to stop further execution.
 http_response_code($statusCode);
-      http_response_code($statusCode);
 
     if ($statusCode < 400) {
-        echo json_encode([
-            "success" => true,
-            "data" => $data
-        ]);
+        echo json_encode(["success" => true, "data" => $data]);
     } else {
-        echo json_encode([
-            "success" => false,
-            "message" => $data
-        ]);
+        echo json_encode(["success" => false, "message" => $data]);
     }
 
     exit;
 }
+
 
 /**
  * Validates an email address.
@@ -535,8 +508,10 @@ http_response_code($statusCode);
  */
 function validateEmail($email) {
     // TODO: return (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
- return (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
+    return (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
 }
+
+
 /**
  * Sanitizes a string input value.
  * Use this before inserting user-supplied strings into the database.
@@ -551,5 +526,4 @@ function sanitizeInput($data) {
     // TODO: Return the sanitized value.
     return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, "UTF-8");
 }
-
 ?>
