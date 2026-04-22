@@ -44,7 +44,8 @@ function createUserRow(user) {
  * TODO: Implement the renderTable function.
  */
 function renderTable(userArray) {
-  userTableBody.innerHTML = "";
+ userTableBody.innerHTML = "";
+
   userArray.forEach(user => {
     userTableBody.appendChild(createUserRow(user));
   });
@@ -80,17 +81,19 @@ async function handleChangePassword(event) {
         new_password: newPass
       })
     });
-const data = await res.json();
 
-if (data.success) {
-  alert("Password updated successfully!");
+    const data = await res.json();
 
-  document.getElementById("current-password").value = "";
-  document.getElementById("new-password").value = "";
-  document.getElementById("confirm-password").value = "";
-} else {
-  alert(data.message);
-}
+    if (data.success) {
+      alert("Password updated successfully!");
+
+      document.getElementById("current-password").value = "";
+      document.getElementById("new-password").value = "";
+      document.getElementById("confirm-password").value = "";
+    } else {
+      alert(data.message);
+    }
+
   } catch (err) {
     alert("Server error");
   }
@@ -208,12 +211,10 @@ function handleSearch() {
  */
 function handleSort(event) {
 const th = event.currentTarget;
-const key = th.dataset.key;  const map = ["name", "email", "is_admin"];
-  const key = map[index];
+  const key = th.dataset.key;
 
-  let dir = event.currentTarget.dataset.sortDir || "asc";
-  dir = dir === "asc" ? "desc" : "asc";
-  event.currentTarget.dataset.sortDir = dir;
+  let dir = th.dataset.sortDir === "asc" ? "desc" : "asc";
+  th.dataset.sortDir = dir;
 
   users.sort((a, b) => {
     let valA = a[key];
@@ -236,26 +237,21 @@ const key = th.dataset.key;  const map = ["name", "email", "is_admin"];
  * TODO: Implement the loadUsersAndInitialize function.
  */
 async function loadUsersAndInitialize() {
-  try {
+ try {
     const res = await fetch("../api/index.php");
-
-    if (!res.ok) {
-      console.error("Failed to fetch users");
-      return;
-    }
-
     const data = await res.json();
 
     if (data.success) {
       users = data.data;
       renderTable(users);
     }
-passwordForm.addEventListener("submit", handleChangePassword);
-addUserForm.addEventListener("submit", handleAddUser);
+
   } catch (err) {
-    console.error("Load error:", err);
+    console.error(err);
   }
 }
+passwordForm.addEventListener("submit", handleChangePassword);
+addUserForm.addEventListener("submit", handleAddUser);
 
 // --- Event Listeners Setup ---
 // These are outside the function to ensure they only attach once.
