@@ -1,6 +1,7 @@
 // --- Global Data Store ---
 let topics = [];
 
+// --- Element Selections ---
 const form = document.getElementById("new-topic-form");
 const topicListContainer = document.getElementById("topic-list-container");
 const createTopicBtn = document.getElementById("create-topic");
@@ -50,6 +51,8 @@ function createTopicArticle(topic) {
 // Render Topics
 // ----------------------------
 function renderTopics() {
+  if (!topicListContainer) return;
+
   topicListContainer.innerHTML = "";
 
   topics.forEach((topic) => {
@@ -82,6 +85,8 @@ async function handleCreateTopic(event) {
 
   const subjectInput = document.getElementById("topic-subject");
   const messageInput = document.getElementById("topic-message");
+
+  if (!subjectInput || !messageInput || !createTopicBtn) return;
 
   const subject = subjectInput.value.trim();
   const message = messageInput.value.trim();
@@ -168,8 +173,13 @@ async function handleTopicListClick(event) {
       const topic = topics.find((topic) => String(topic.id) === String(id));
       if (!topic) return;
 
-      document.getElementById("topic-subject").value = topic.subject;
-      document.getElementById("topic-message").value = topic.message;
+      const subjectInput = document.getElementById("topic-subject");
+      const messageInput = document.getElementById("topic-message");
+
+      if (!subjectInput || !messageInput || !createTopicBtn) return;
+
+      subjectInput.value = topic.subject;
+      messageInput.value = topic.message;
 
       createTopicBtn.textContent = "Update Topic";
       createTopicBtn.dataset.editId = id;
@@ -182,6 +192,14 @@ async function handleTopicListClick(event) {
 // ----------------------------
 // Initialize
 // ----------------------------
-form.addEventListener("submit", handleCreateTopic);
-topicListContainer.addEventListener("click", handleTopicListClick);
-loadTopics();
+if (form) {
+  form.addEventListener("submit", handleCreateTopic);
+}
+
+if (topicListContainer) {
+  topicListContainer.addEventListener("click", handleTopicListClick);
+}
+
+if (form && topicListContainer) {
+  loadTopics();
+}
