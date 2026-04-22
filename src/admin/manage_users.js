@@ -95,7 +95,7 @@ function renderTable(userArray) {
  */
 async function handleChangePassword(event) {
   // ... your implementation here ...
- event.preventDefault();
+  event.preventDefault();
 
   const current = document.getElementById("current-password").value;
   const newPass = document.getElementById("new-password").value;
@@ -125,12 +125,11 @@ async function handleChangePassword(event) {
     const data = await res.json();
 
     if (res.ok) {
-  alert("Password updated successfully!");
+      alert("Password updated successfully!");
 
-  document.getElementById("current-password").value = "";
-  document.getElementById("new-password").value = "";
-  document.getElementById("confirm-password").value = "";
-}
+      document.getElementById("current-password").value = "";
+      document.getElementById("new-password").value = "";
+      document.getElementById("confirm-password").value = "";
     } else {
       alert(data.message);
     }
