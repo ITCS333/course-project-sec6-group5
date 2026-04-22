@@ -111,29 +111,28 @@ async function handleChangePassword(event) {
     return;
   }
 
-  try {
-    const res = await fetch("../api/index.php?action=change_password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: 1,
-        current_password: current,
-        new_password: newPass
-      })
-    });
+ try {
+  const res = await fetch("../api/index.php?action=change_password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: 1,
+      current_password: current,
+      new_password: newPass
+    })
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (res.ok) {
-      alert("Password updated successfully!");
-      passwordForm.reset();
-    } else {
-      alert(data.message);
-    }
-
-  } catch (err) {
-    alert("Server error");
+  if (res.ok) {
+    alert("Password updated successfully!");
+    document.getElementById("password-form").reset();
+  } else {
+    alert(data.message);
   }
+
+} catch (err) {
+  alert("Server error");
 }
 
 /**
@@ -208,15 +207,16 @@ async function handleAddUser(event) {
  */
 function handleTableClick(event) {
   // ... your implementation here ...
-const btn = event.target.closest("button");
-if (!btn) return;
+ const btn = event.target.closest("button");
+  if (!btn) return;
 
-const id = btn.dataset.id;
+  const id = btn.dataset.id;
 
-  if (event.target.classList.contains("delete-btn")) {
+  if (btn.classList.contains("delete-btn")) {
     fetch(`../api/index.php?id=${id}`, {
       method: "DELETE"
-    }).then(res => res.json())
+    })
+      .then(res => res.json())
       .then(data => {
         if (data.success) {
           users = users.filter(u => u.id != id);
@@ -227,7 +227,6 @@ const id = btn.dataset.id;
       });
   }
 }
-
 /**
  * TODO: Implement the handleSearch function.
  * This function is called on the "input" event of the searchInput.
@@ -275,6 +274,7 @@ const term = searchInput.value.toLowerCase();
 function handleSort(event) {
   // ... your implementation here ...
 const index = event.currentTarget.cellIndex;
+
   const map = ["name", "email", "is_admin"];
   const key = map[index];
 
@@ -288,15 +288,15 @@ const index = event.currentTarget.cellIndex;
     let valA = a[key];
     let valB = b[key];
 
-    if (key === "name" || key === "email") {
-      return dir === "asc"
-        ? valA.localeCompare(valB)
-        : valB.localeCompare(valA);
-    } else {
-      return dir === "asc"
-        ? valA - valB
-        : valB - valA;
+    if (key === "is_admin") {
+      valA = Number(valA);
+      valB = Number(valB);
+      return dir === "asc" ? valA - valB : valB - valA;
     }
+
+    return dir === "asc"
+      ? valA.localeCompare(valB)
+      : valB.localeCompare(valA);
   });
 
   renderTable(users);
