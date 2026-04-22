@@ -1,20 +1,20 @@
+/*
+  Requirement: Make the "Discussion Board" page interactive.
+*/
+
 // --- Global Data Store ---
 let topics = [];
 
 // --- Element Selections ---
 const form = document.getElementById("new-topic-form");
 const topicListContainer = document.getElementById("topic-list-container");
-const createTopicBtn = document.getElementById("create-topic");
 
-// ----------------------------
-// Create Topic Article
-// ----------------------------
+// --- Functions ---
 function createTopicArticle(topic) {
   const article = document.createElement("article");
 
   const h3 = document.createElement("h3");
   const link = document.createElement("a");
-
   link.href = `topic.html?id=${topic.id}`;
   link.textContent = topic.subject;
   h3.appendChild(link);
@@ -23,18 +23,17 @@ function createTopicArticle(topic) {
   footer.textContent = `Posted by: ${topic.author} on ${topic.created_at}`;
 
   const div = document.createElement("div");
-  div.classList.add("actions");
 
   const editBtn = document.createElement("button");
-  editBtn.textContent = "Edit";
   editBtn.classList.add("edit-btn");
   editBtn.dataset.id = topic.id;
+  editBtn.textContent = "Edit";
   editBtn.type = "button";
 
   const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "Delete";
   deleteBtn.classList.add("delete-btn");
   deleteBtn.dataset.id = topic.id;
+  deleteBtn.textContent = "Delete";
   deleteBtn.type = "button";
 
   div.appendChild(editBtn);
@@ -47,159 +46,143 @@ function createTopicArticle(topic) {
   return article;
 }
 
-// ----------------------------
-// Render Topics
-// ----------------------------
 function renderTopics() {
-  if (!topicListContainer) return;
-
   topicListContainer.innerHTML = "";
 
   topics.forEach((topic) => {
-    topicListContainer.appendChild(createTopicArticle(topic));
+    const article = createTopicArticle(topic);
+    topicListContainer.appendChild(article);
   });
 }
 
-// ----------------------------
-// Load Topics
-// ----------------------------
-async function loadTopics() {
-  try {
-    const response = await fetch("./api/index.php");
-    const result = await response.json();
-
-    if (result.success) {
-      topics = result.data;
-      renderTopics();
-    }
-  } catch (error) {
-    console.error("Error loading topics:", error);
-  }
-}
-
-// ----------------------------
-// Create / Update Topic
-// ----------------------------
 async function handleCreateTopic(event) {
   event.preventDefault();
 
   const subjectInput = document.getElementById("topic-subject");
   const messageInput = document.getElementById("topic-message");
-
-  if (!subjectInput || !messageInput || !createTopicBtn) return;
+  const createBtn = document.getElementById("create-topic");
 
   const subject = subjectInput.value.trim();
   const message = messageInput.value.trim();
 
-  if (!subject || !message) return;
+  if (!subject || !message) {
+    return;
+  }
 
-  const editId = createTopicBtn.dataset.editId;
+  const editId = createBtn.dataset.editId;
 
-  try {
-    if (editId) {
-      const response = await fetch("./api/index.php", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: editId,
-          subject: subject,
-          message: message,
-        }),
-      });
+  if (editId) {
+    await handleUpdateTopic(editId, { subject, message });
+    createBtn.textContent = "Create Topic";
+    delete createBtn.dataset.editId;
+    form.reset();
+    return;
+  }
 
-      const result = await response.json();
+  const response = await fetch("./api/index.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      subject,
+      message,
+      author: "Student",
+    }),
+  });
 
-      if (result.success) {
-        topics = topics.map((topic) =>
-          String(topic.id) === String(editId)
-            ? { ...topic, subject, message }
-            : topic
-        );
+  const result = await response.json();
 
-        renderTopics();
-        form.reset();
-        createTopicBtn.textContent = "Create Topic";
-        delete createTopicBtn.dataset.editId;
-      }
-    } else {
-      const response = await fetch("./api/index.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          subject: subject,
-          message: message,
-          author: "Student",
-        }),
-      });
+  if (result.success === true) {
+    topics.push({
+      id: result.id,
+      subject: subject,
+      message: message,
+      author: "Student",
+      created_at: new Date().toISOString().slice(0, 19).replace("T", " "),
+    });
 
-      const result = await response.json();
-
-      if (result.success) {
-        await loadTopics();
-        form.reset();
-      }
-    }
-  } catch (error) {
-    console.error("Error saving topic:", error);
+    renderTopics();
+    form.reset();
   }
 }
 
-// ----------------------------
-// Delete / Edit Topic
-// ----------------------------
+async function handleUpdateTopic(id, fields) {
+  const response = await fetch("./api/index.php", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: id,
+      subject: fields.subject,
+      message: fields.message,
+    }),
+  });
+
+  const result = await response.json();
+
+  if (result.success === true) {
+    topics = topics.map((topic) => {
+      if (String(topic.id) === String(id)) {
+        return {
+          ...topic,
+          subject: fields.subject,
+          message: fields.message,
+        };
+      }
+      return topic;
+    });
+
+    renderTopics();
+  }
+}
+
 async function handleTopicListClick(event) {
-  const id = event.target.dataset.id;
-  if (!id) return;
+  if (event.target.classList.contains("delete-btn")) {
+    const id = event.target.dataset.id;
 
-  try {
-    if (event.target.classList.contains("delete-btn")) {
-      const response = await fetch(`./api/index.php?id=${id}`, {
-        method: "DELETE",
-      });
+    const response = await fetch(`./api/index.php?id=${id}`, {
+      method: "DELETE",
+    });
 
-      const result = await response.json();
+    const result = await response.json();
 
-      if (result.success) {
-        topics = topics.filter((topic) => String(topic.id) !== String(id));
-        renderTopics();
-      }
+    if (result.success === true) {
+      topics = topics.filter((topic) => String(topic.id) !== String(id));
+      renderTopics();
+    }
+  }
+
+  if (event.target.classList.contains("edit-btn")) {
+    const id = event.target.dataset.id;
+    const topic = topics.find((t) => String(t.id) === String(id));
+
+    if (!topic) {
+      return;
     }
 
-    if (event.target.classList.contains("edit-btn")) {
-      const topic = topics.find((topic) => String(topic.id) === String(id));
-      if (!topic) return;
+    document.getElementById("topic-subject").value = topic.subject;
+    document.getElementById("topic-message").value = topic.message;
 
-      const subjectInput = document.getElementById("topic-subject");
-      const messageInput = document.getElementById("topic-message");
-
-      if (!subjectInput || !messageInput || !createTopicBtn) return;
-
-      subjectInput.value = topic.subject;
-      messageInput.value = topic.message;
-
-      createTopicBtn.textContent = "Update Topic";
-      createTopicBtn.dataset.editId = id;
-    }
-  } catch (error) {
-    console.error("Error handling topic action:", error);
+    const createBtn = document.getElementById("create-topic");
+    createBtn.textContent = "Update Topic";
+    createBtn.dataset.editId = topic.id;
   }
 }
 
-// ----------------------------
-// Initialize
-// ----------------------------
-if (form) {
-  form.addEventListener("submit", handleCreateTopic);
-}
+async function loadAndInitialize() {
+  const response = await fetch("./api/index.php");
+  const result = await response.json();
 
-if (topicListContainer) {
+  if (result.success === true) {
+    topics = result.data;
+    renderTopics();
+  }
+
+  form.addEventListener("submit", handleCreateTopic);
   topicListContainer.addEventListener("click", handleTopicListClick);
 }
 
-if (form && topicListContainer) {
-  loadTopics();
-}
+// --- Initial Page Load ---
+loadAndInitialize();
