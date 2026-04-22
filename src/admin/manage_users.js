@@ -97,9 +97,13 @@ async function handleChangePassword(event) {
   // ... your implementation here ...
   event.preventDefault();
 
-  const current = document.getElementById("current-password").value;
-  const newPass = document.getElementById("new-password").value;
-  const confirm = document.getElementById("confirm-password").value;
+  const currentInput = document.getElementById("current-password");
+  const newInput = document.getElementById("new-password");
+  const confirmInput = document.getElementById("confirm-password");
+
+  const current = currentInput.value;
+  const newPass = newInput.value;
+  const confirm = confirmInput.value;
 
   if (newPass !== confirm) {
     alert("Passwords do not match.");
@@ -127,9 +131,10 @@ async function handleChangePassword(event) {
     if (res.ok) {
       alert("Password updated successfully!");
 
-      document.getElementById("current-password").value = "";
-      document.getElementById("new-password").value = "";
-      document.getElementById("confirm-password").value = "";
+      // IMPORTANT: clear inputs like this (not form.reset)
+      currentInput.value = "";
+      newInput.value = "";
+      confirmInput.value = "";
     } else {
       alert(data.message);
     }
@@ -138,7 +143,6 @@ async function handleChangePassword(event) {
     alert("Server error");
   }
 }
-
 /**
  * TODO: Implement the handleAddUser function.
  * This function is called when the "Add User" form is submitted.
