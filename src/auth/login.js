@@ -42,7 +42,8 @@ const messageContainer = document.getElementById("message-container");
 function displayMessage(message, type) {
   // ... your implementation here ...
 messageContainer.textContent = message;
-messageContainer.className = "message-container " + type;}
+messageContainer.className = type;
+}
 /**
  * TODO: Implement the isValidEmail function.
  * This function takes one argument:
