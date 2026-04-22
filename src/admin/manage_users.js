@@ -95,7 +95,7 @@ function renderTable(userArray) {
  */
 async function handleChangePassword(event) {
   // ... your implementation here ...
-   event.preventDefault();
+    event.preventDefault();
 
   const current = document.getElementById("current-password").value;
   const newPass = document.getElementById("new-password").value;
@@ -111,28 +111,29 @@ async function handleChangePassword(event) {
     return;
   }
 
- try {
-  const res = await fetch("../api/index.php?action=change_password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      id: 1,
-      current_password: current,
-      new_password: newPass
-    })
-  });
+  try {
+    const res = await fetch("../api/index.php?action=change_password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: 1,
+        current_password: current,
+        new_password: newPass
+      })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (res.ok) {
-    alert("Password updated successfully!");
-    document.getElementById("password-form").reset();
-  } else {
-    alert(data.message);
+    if (res.ok) {
+      alert("Password updated successfully!");
+      document.getElementById("password-form").reset();
+    } else {
+      alert(data.message);
+    }
+
+  } catch (err) {
+    alert("Server error");
   }
-
-} catch (err) {
-  alert("Server error");
 }
 
 /**
