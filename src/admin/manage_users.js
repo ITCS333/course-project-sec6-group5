@@ -93,7 +93,7 @@ function renderTable(userArray) {
  * 5. On success, show an alert: "Password updated successfully!" and clear all three inputs.
  * 6. On failure, show the error message returned by the API.
  */
-function handleChangePassword(event) {
+async function handleChangePassword(event) {
   // ... your implementation here ...
    event.preventDefault();
 
@@ -152,7 +152,7 @@ function handleChangePassword(event) {
  * 6. Clear the form inputs on success.
  * 7. On failure, show the error message returned by the API.
  */
-function handleAddUser(event) {
+async function handleAddUser(event) {
   // ... your implementation here ...
  event.preventDefault();
 
