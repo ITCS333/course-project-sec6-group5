@@ -66,27 +66,39 @@
 // Allow cross-origin requests (CORS) if needed.
 // Allow HTTP methods: GET, POST, PUT, DELETE, OPTIONS.
 // Allow headers: Content-Type, Authorization.
-
+header("Content-Type:application/json");
+header("Access-Control-Allow-Origin: *");    
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization"); 
 
 // TODO: Handle preflight OPTIONS request.
 // If the request method is OPTIONS, return HTTP 200 and exit.
+if($_SERVER['REQUEST_METHOD']==='OPTIONS'){
+    http_response_code(200);
+    exit;
+}
 
 
 // TODO: Include the shared database connection file.
 // require_once __DIR__ . '/../../common/db.php';
+require_once __DIR__ .
+$db = getDBConnection();    
 
 
 // TODO: Get the PDO database connection.
 // $db = getDBConnection();
-
+$method = $_SERVER['REQUEST_METHOD'];
 
 // TODO: Read the HTTP request method.
 // $method = $_SERVER['REQUEST_METHOD'];
+$input = json_decode(file_get_contents("php://input"), true);
 
 
 // TODO: Read and decode the request body for POST and PUT requests.
 // $rawData = file_get_contents('php://input');
 // $data    = json_decode($rawData, true) ?? [];
+$rawData = file_get_contents('php://input');
+$data    = json_decode($rawData, true) ?? [];
 
 
 // TODO: Read query parameters.
@@ -94,8 +106,17 @@
 // $id           = $_GET['id']            ?? null;  // integer assignment id
 // $assignmentId = $_GET['assignment_id'] ?? null;  // integer assignment id for comments queries
 // $commentId    = $_GET['comment_id']    ?? null;  // integer comment id
-
-
+switch($method){
+    case'GET':
+    if($id){
+    } else{
+ }
+    break;
+    case'POST':
+     break;
+    case'DELETE':
+    break;
+}
 // ============================================================================
 // ASSIGNMENT FUNCTIONS
 // ============================================================================
