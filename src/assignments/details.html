@@ -10,9 +10,11 @@
 <head>
     <!-- TODO: Add <meta> tags for charset (UTF-8) and viewport
          (width=device-width, initial-scale=1.0). -->
+  <meta charset="UTF-8">
+  <meta name="viewport content="width=device-width, initial-scale=1.0">
 
     <!-- TODO: Add a <title>, e.g., "Assignment Details". -->
-
+<tittle>Assignment Details</tittle>
     <!-- TODO: Link to your CSS framework or stylesheet. -->
 
     <!-- Required: link details.js with defer. -->
@@ -24,7 +26,9 @@
          Inside it, add an <h1 id="assignment-title">.
          details.js will set its textContent to the assignment's title.
          Leave it empty for now. -->
-
+<header>
+  <h1>id="assignment-title"</h1>
+</header>
     <!-- TODO: Create the <main> content area. -->
 
         <!-- ============================================================
@@ -53,7 +57,21 @@
                  Leave the list empty here. -->
 
         <!-- End of <article> -->
-
+<main>
+  <article id="assignment-details">
+   <p id="assignment-due-date">
+     <h2>Description</h2>
+     <p id="assignment-description">
+       <h2> Attached Files &amp; Links</h2>
+       <ul id="assignment-files-list"></ul>
+  </article>
+  <hr>
+  <section id="comments-section">
+  <h2>Comments</h2>
+    <div d="comments-container"></div>
+    </section>
+       
+</main>
 
         <!-- ============================================================
              Section 2: Discussion Forum
@@ -92,6 +110,24 @@
                     <!-- TODO: Add a submit <button>.
                          - type="submit"
                          - Text: "Post Comment" -->
+  <setion id="discussion-forum">
+    <h2>Questions &amp; Discussion</h2>
+    <div id="comment-list"></div>
+    <hr>
+    <form id="comment-form" action="#">
+      <fieldset>
+        <legand>Ask a Question </legand>
+        <label for="author">Name:</label>
+        <input type="text" id="author" name="author" required>
+        
+ <label for="comment-text">Your Question/Comment:</label>
+        <textarea id="comment-text" name="text" required></textarea>
+
+        <button type="submit">Post Comment</button>
+        
+      </fieldset>
+    </form>
+  </setion>
                 <!-- End of <fieldset> -->
             <!-- End of <form> -->
 
