@@ -66,14 +66,14 @@
 // Allow cross-origin requests (CORS) if needed.
 // Allow HTTP methods: GET, POST, PUT, DELETE, OPTIONS.
 // Allow headers: Content-Type, Authorization.
-header("Content-Type:application/json");
+header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");    
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization"); 
 
 // TODO: Handle preflight OPTIONS request.
 // If the request method is OPTIONS, return HTTP 200 and exit.
-if($_SERVER['REQUEST_METHOD']==='OPTIONS'){
+if($_SERVER['REQUEST_METHOD']=== 'OPTIONS'){
     http_response_code(200);
     exit;
 }
@@ -81,7 +81,7 @@ if($_SERVER['REQUEST_METHOD']==='OPTIONS'){
 
 // TODO: Include the shared database connection file.
 // require_once __DIR__ . '/../../common/db.php';
-require_once __DIR__ .
+require_once __DIR__ . '/../../common/db.php';
 $db = getDBConnection();    
 
 
@@ -107,14 +107,14 @@ $data    = json_decode($rawData, true) ?? [];
 // $assignmentId = $_GET['assignment_id'] ?? null;  // integer assignment id for comments queries
 // $commentId    = $_GET['comment_id']    ?? null;  // integer comment id
 switch($method){
-    case'GET':
-    if($id){
-    } else{
+    case 'GET':
+    if ($id) {
+    } else {
  }
     break;
-    case'POST':
+    case 'POST':
      break;
-    case'DELETE':
+    case 'DELETE':
     break;
 }
 // ============================================================================
