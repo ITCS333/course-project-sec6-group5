@@ -19,6 +19,10 @@
     <!-- TODO: Link to your CSS framework or stylesheet. -->
 
     <!-- Required: link admin.js with defer. -->
+  <meta character encoding="UTF-8">
+  <meta name=viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Assignments</title>
+  <link rel="stylesheet" herf+"../../assests/css/style.css">
     <script src="admin.js" defer></script>
 </head>
 <body>
@@ -68,6 +72,32 @@
                          - When the form is in edit mode, admin.js will
                            change the button text to "Update Assignment" and
                            store the id being edited in a data attribute. -->
+  <header>
+    <h1>Manage Assignments</h1>
+  </header>
+  <main>
+    <section>
+      <h2>Add a New Assignment</h2>
+      <form id="assignment-form" action="#">
+        <fieldset><legend>Assignment Details</legend>
+        <p>
+          <label for="assignment-title" name="title" required>
+            <input type="text" id="assignment-title" name="tittle" required>
+        </p>
+        <p>
+          <label for="assignment-description">Description:</label>
+          <textarea id="assignment-description" name="description" rows="5" required></textarea>
+        </p>
+        
+        <p>
+          <label for="assignment-due-date">Due Date:</label>
+          <input type="date" id="assignment-due-date" name="due-date" required>
+        </p>
+        <button type="submit">Create Assignment</button>
+        </fieldset>
+      </form>
+    </section>
+  </main>
                 <!-- End of <fieldset> -->
             <!-- End of <form> -->
         <!-- End of form <section> -->
@@ -117,5 +147,19 @@
         <!-- End of list <section> -->
 
     <!-- End of <main> -->
+  <section>
+    <h2>Current Assignments</h2>
+    <table id="assignments-table">
+      <thead> 
+        <tr> 
+          <th>Title</th>
+          <th>Due Date</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="assignments-tbody"></tbody>
+    </table>
+  </section>
 </body>
 </html>
