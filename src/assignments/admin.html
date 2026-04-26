@@ -19,7 +19,7 @@
     <!-- TODO: Link to your CSS framework or stylesheet. -->
 
     <!-- Required: link admin.js with defer. -->
-  <meta character="UTF-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manage Assignments</title>
   <link rel="stylesheet" herf+"../../assests/css/style.css">
@@ -81,7 +81,7 @@
       <form id="assignment-form" action="#">
       <fieldset><legend>Assignment Details</legend>
         <p>
-          <label for="assignment-title" name="title" required>
+          <label for="assignment-title">Title:</label>
           <input type="text" id="assignment-title" name="tittle" required>
         </p>
         <p>
@@ -93,7 +93,11 @@
           <label for="assignment-due-date">Due Date:</label>
           <input type="date" id="assignment-due-date" name="due-date" required>
         </p>
-        <button type="submit">Create Assignment</button>
+        <p>
+          <label for="assignment-files">Assignment Files(one URL per line):</label>
+          <textarea id="assignment-files" name="files"></textarea>
+        </p>
+        <button type="submit" id="add-assignment">Create Assignment</button>
         </fieldset>
       </form>
     </section>
