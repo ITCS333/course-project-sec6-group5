@@ -94,12 +94,15 @@ function renderTable(userArray) {
  * 6. On failure, show the error message returned by the API.
  */
 function handleChangePassword(event) {
-  // ... your implementation here ...
- event.preventDefault();
+  event.preventDefault();
 
-  const current = document.getElementById("current-password").value;
-  const newPass = document.getElementById("new-password").value;
-  const confirm = document.getElementById("confirm-password").value;
+  const currentEl = document.getElementById("current-password");
+  const newEl = document.getElementById("new-password");
+  const confirmEl = document.getElementById("confirm-password");
+
+  const current = currentEl.value;
+  const newPass = newEl.value;
+  const confirm = confirmEl.value;
 
   if (newPass !== confirm) {
     alert("Passwords do not match.");
@@ -110,6 +113,10 @@ function handleChangePassword(event) {
     alert("Password must be at least 8 characters.");
     return;
   }
+
+  currentEl.value = "";
+  newEl.value = "";
+  confirmEl.value = "";
 
   fetch("../api/index.php?action=change_password", {
     method: "POST",
@@ -124,10 +131,6 @@ function handleChangePassword(event) {
     .then(data => {
       if (data.success || data.message) {
         alert("Password updated successfully!");
-
-        document.getElementById("current-password").value = "";
-        document.getElementById("new-password").value = "";
-        document.getElementById("confirm-password").value = "";
       } else {
         alert(data.message);
       }
