@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 /**
  * User Management API
  *
@@ -59,8 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // TODO: Get the PDO database connection by calling getDBConnection().
 
-require_once __DIR__ . "/../config/db.php";
+require_once _DIR_ . "/../../config/db.php";
 $db = getDBConnection();
+
 
 // TODO: Read the HTTP request method from $_SERVER['REQUEST_METHOD'].
 
@@ -94,7 +97,6 @@ $db = getDBConnection();
  *   - Validate the 'order' value; only accept 'asc' or 'desc'.
  */
 $method = $_SERVER['REQUEST_METHOD'];
-
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true) ?? [];
 
@@ -102,7 +104,7 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 $action = $_GET['action'] ?? null;
 $search = $_GET['search'] ?? null;
 $sort = $_GET['sort'] ?? null;
-$order = $_GET['order'] ?? 'asc';
+$order = $_GET['order'] ?? 'asc';;
 
 
 function getUsers($dbو $search, $sort, $order) {
@@ -131,15 +133,13 @@ $query = "SELECT id, name, email, is_admin, created_at FROM users";
     }
 
     $allowedSort = ["name", "email", "is_admin"];
-
     if (!empty($sort) && in_array($sort, $allowedSort)) {
-        $order = strtolower($order) === "desc" ? "DESC" : "ASC";
-        $query .= " ORDER BY $sort $order";
+        $orderDir = strtolower($order) === "desc" ? "DESC" : "ASC";
+        $query .= " ORDER BY $sort $orderDir";
     }
 
     $stmt = $db->prepare($query);
     $stmt->execute($params);
-
     sendResponse($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 /**
@@ -160,19 +160,18 @@ function getUserById($db, $id) {
 
     // TODO: If no row is found, call sendResponse() with an error message and HTTP 404.
     //       If found, call sendResponse() with the row and HTTP 200.
-
-  
-    $stmt = $db->prepare("SELECT id, name, email, is_admin, created_at FROM users WHERE id = :id");
+$stmt = $db->prepare("SELECT id, name, email, is_admin, created_at FROM users WHERE id = :id");
     $stmt->execute([":id" => $id]);
-
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$user) {
         sendResponse("User not found", 404);
     }
-
     sendResponse($user);
 }
+
+  
+
 /**
  * Function: Create a new user.
  * Method: POST (no ?action parameter)
@@ -211,12 +210,12 @@ if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
         sendResponse("Missing fields", 400);
     }
 
-    $name = sanitizeInput(trim($data['name']));
-    $email = sanitizeInput(trim($data['email']));
+    $name = sanitizeInput($data['name']);
+    $email = trim($data['email']);
     $password = trim($data['password']);
 
     if (!validateEmail($email)) {
-        sendResponse("Invalid email", 400);
+        sendResponse("Invalid email format", 400);
     }
 
     if (strlen($password) < 8) {
@@ -225,7 +224,6 @@ if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
 
     $check = $db->prepare("SELECT id FROM users WHERE email = :email");
     $check->execute([":email" => $email]);
-
     if ($check->fetch()) {
         sendResponse("Email already exists", 409);
     }
@@ -233,11 +231,7 @@ if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
     $hash = password_hash($password, PASSWORD_DEFAULT);
     $is_admin = isset($data['is_admin']) ? (int)$data['is_admin'] : 0;
 
-    $stmt = $db->prepare("
-        INSERT INTO users (name, email, password, is_admin)
-        VALUES (:name, :email, :password, :is_admin)
-    ");
-
+    $stmt = $db->prepare("INSERT INTO users (name, email, password, is_admin) VALUES (:name, :email, :password, :is_admin)");
     $stmt->execute([
         ":name" => $name,
         ":email" => $email,
@@ -247,8 +241,6 @@ if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
 
     sendResponse(["id" => (int)$db->lastInsertId()], 201);
 }
-
-
 
 /**
  * Function: Update an existing user.
@@ -442,42 +434,24 @@ function changePassword($db, $data) {
 // ============================================================================
 
 try {
-   if ($method === 'GET') {
-
-        if ($id) {
-            getUserById($db, $id);
-        } else {
-            getUsers($db, $search, $sort, $order);
-        }
-
+  if ($method === 'GET') {
+        $id ? getUserById($db, $id) : getUsers($db, $search, $sort, $order);
     } elseif ($method === 'POST') {
-
-        if ($action === 'change_password') {
-            changePassword($db, $data);
-        } else {
-            createUser($db, $data);
-        }
-
+        ($action === 'change_password') ? changePassword($db, $data) : createUser($db, $data);
     } elseif ($method === 'PUT') {
-
         updateUser($db, $data);
-
     } elseif ($method === 'DELETE') {
-
         deleteUser($db, $id);
-
     } else {
         sendResponse("Method not allowed", 405);
     }
-
 } catch (PDOException $e) {
     error_log($e->getMessage());
-    sendResponse("Database error", 500);
+    sendResponse("Database error occurred", 500);
 } catch (Exception $e) {
     error_log($e->getMessage());
     sendResponse("Server error", 500);
 }
-
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -499,16 +473,15 @@ function sendResponse($data, $statusCode = 200) {
     //         json_encode(['success' => false, 'message' => $data])
 
     // TODO: Call exit to stop further execution.
- http_response_code($statusCode);
-
+http_response_code($statusCode);
     if ($statusCode < 400) {
         echo json_encode(["success" => true, "data" => $data]);
     } else {
         echo json_encode(["success" => false, "message" => $data]);
     }
-
     exit;
 }
+
 
 
 
@@ -520,7 +493,7 @@ function sendResponse($data, $statusCode = 200) {
  */
 function validateEmail($email) {
     // TODO: return (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
-     return (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
+   return (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
 }
 
 
