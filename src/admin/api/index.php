@@ -428,43 +428,37 @@ function changePassword($db, $data) {
 // ============================================================================
 
 try {
-
     if ($method === 'GET') {
-        // TODO: If the 'id' query parameter is present and non-empty, call getUserById($db, $id).
-        // TODO: Otherwise, call getUsers($db) (supports optional search/sort parameters).
-  if ($id) getUserById($db, $id);
-        else getUsers($db);
+
+        if ($id) {
+            getUserById($db, $id);
+        } else {
+            getUsers($db);
+        }
+
+    } elseif ($method === 'POST' && $action === 'change_password') {
+        changePassword($db, $data);
+
     } elseif ($method === 'POST') {
-        // TODO: If the 'action' query parameter equals 'change_password', call changePassword($db, $data).
-        // TODO: Otherwise, call createUser($db, $data).
- if ($action === "change_password") changePassword($db, $data);
-        else createUser($db, $data);
+        createUser($db, $data);
+
     } elseif ($method === 'PUT') {
-        // TODO: Call updateUser($db, $data).
-        //       The user id to update comes from the JSON body, not the query string.
         updateUser($db, $data);
 
     } elseif ($method === 'DELETE') {
-        // TODO: Read the 'id' query parameter.
-        // TODO: Call deleteUser($db, $id).
         deleteUser($db, $id);
 
     } else {
-        // TODO: Return HTTP 405 (Method Not Allowed) with a JSON error message.
-            sendResponse("Method not allowed", 405);
+        sendResponse("Method not allowed", 405);
     }
 
 } catch (PDOException $e) {
-    // TODO: Log the error (e.g. error_log($e->getMessage())).
-    // TODO: Call sendResponse() with a generic "Database error" message and HTTP 500.
-    //       Do NOT expose the raw exception message to the client.
- error_log($e->getMessage());
+    error_log($e->getMessage());
     sendResponse("Database error", 500);
+
 } catch (Exception $e) {
-    // TODO: Call sendResponse() with the exception message and HTTP 500.
     sendResponse($e->getMessage(), 500);
 }
-
 
 // ============================================================================
 // HELPER FUNCTIONS
