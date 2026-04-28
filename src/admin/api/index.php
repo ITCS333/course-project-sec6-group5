@@ -58,8 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // TODO: Get the PDO database connection by calling getDBConnection().
 
-require_once __DIR__ . "/../config/db.php";$db = getDBConnection();
-
+require_once __DIR__ . "/../config/db.php";
+$db = getDBConnection();
 // TODO: Read the HTTP request method from $_SERVER['REQUEST_METHOD'].
 
 
@@ -120,7 +120,6 @@ function getUsers($db) {
     // TODO: Fetch all rows as an associative array.
 
     // TODO: Call sendResponse() with the array and HTTP status 200.
-global $search, $sort, $order;
 
     $query = "SELECT id, name, email, is_admin, created_at FROM users";
     $params = [];
@@ -161,19 +160,22 @@ function getUserById($db, $id) {
 
     // TODO: If no row is found, call sendResponse() with an error message and HTTP 404.
     //       If found, call sendResponse() with the row and HTTP 200.
- if (!$id) sendResponse("ID required", 400);
+
+    if (empty($id)) {
+        sendResponse("ID required", 400);
+    }
 
     $stmt = $db->prepare("SELECT id, name, email, is_admin, created_at FROM users WHERE id = :id");
     $stmt->execute([":id" => $id]);
 
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$user) sendResponse("User not found", 404);
+    if (!$user) {
+        sendResponse("User not found", 404);
+    }
 
     sendResponse($user);
 }
-
-
 /**
  * Function: Create a new user.
  * Method: POST (no ?action parameter)
@@ -433,14 +435,16 @@ try {
         if ($id) {
             getUserById($db, $id);
         } else {
-            getUsers($db);
+            getUsers($db, $search, $sort, $order);
         }
 
-    } elseif ($method === 'POST' && $action === 'change_password') {
-        changePassword($db, $data);
-
     } elseif ($method === 'POST') {
-        createUser($db, $data);
+
+        if ($action === 'change_password') {
+            changePassword($db, $data);
+        } else {
+            createUser($db, $data);
+        }
 
     } elseif ($method === 'PUT') {
         updateUser($db, $data);
@@ -457,7 +461,7 @@ try {
     sendResponse("Database error", 500);
 
 } catch (Exception $e) {
-    sendResponse($e->getMessage(), 500);
+    sendResponse("Server error", 500);
 }
 
 // ============================================================================
