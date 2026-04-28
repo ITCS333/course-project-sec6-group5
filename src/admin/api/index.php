@@ -120,17 +120,17 @@ function getUsers($db) {
     // TODO: Fetch all rows as an associative array.
 
     // TODO: Call sendResponse() with the array and HTTP status 200.
-
-    $query = "SELECT id, name, email, is_admin, created_at FROM users";
+   query = "SELECT id, name, email, is_admin, created_at FROM users";
     $params = [];
 
-    if ($search) {
+    if (!empty($search)) {
         $query .= " WHERE name LIKE :search OR email LIKE :search";
         $params[':search'] = "%$search%";
     }
 
     $allowedSort = ["name", "email", "is_admin"];
-    if (in_array($sort, $allowedSort)) {
+
+    if (!empty($sort) && in_array($sort, $allowedSort)) {
         $dir = ($order === "desc") ? "DESC" : "ASC";
         $query .= " ORDER BY $sort $dir";
     }
@@ -140,8 +140,6 @@ function getUsers($db) {
 
     sendResponse($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
-
-
 /**
  * Function: Get a single user by primary key.
  * Method: GET with ?id=<int>
@@ -430,12 +428,13 @@ function changePassword($db, $data) {
 // ============================================================================
 
 try {
+   
     if ($method === 'GET') {
 
         if ($id) {
             getUserById($db, $id);
         } else {
-            getUsers($db, $search, $sort, $order);
+            getUsers($db);
         }
 
     } elseif ($method === 'POST') {
