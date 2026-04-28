@@ -120,17 +120,22 @@ function getUsers($db) {
     // TODO: Fetch all rows as an associative array.
 
     // TODO: Call sendResponse() with the array and HTTP status 200.
-   query = "SELECT id, name, email, is_admin, created_at FROM users";
+
+    $search = $_GET['search'] ?? '';
+    $sort = $_GET['sort'] ?? '';
+    $order = $_GET['order'] ?? 'asc';
+
+    $query = "SELECT id, name, email, is_admin, created_at FROM users";
     $params = [];
 
-    if (!empty($search)) {
+    if ($search !== '') {
         $query .= " WHERE name LIKE :search OR email LIKE :search";
         $params[':search'] = "%$search%";
     }
 
     $allowedSort = ["name", "email", "is_admin"];
 
-    if (!empty($sort) && in_array($sort, $allowedSort)) {
+    if ($sort !== '' && in_array($sort, $allowedSort)) {
         $dir = ($order === "desc") ? "DESC" : "ASC";
         $query .= " ORDER BY $sort $dir";
     }
@@ -138,7 +143,7 @@ function getUsers($db) {
     $stmt = $db->prepare($query);
     $stmt->execute($params);
 
-    sendResponse($stmt->fetchAll(PDO::FETCH_ASSOC));
+    sendResponse($stmt->fetchAll(PDO::FETCH_ASSOC), 200);
 }
 /**
  * Function: Get a single user by primary key.
@@ -329,8 +334,7 @@ function updateUser($db, $data) {
     $stmt = $db->prepare($query);
     $stmt->execute($params);
 
-    sendResponse("Updated successfully");
-}
+sendResponse("Updated successfully", 200);}
 
 
 /**
