@@ -54,45 +54,31 @@
  * the assignments table) so that details.js can read the id from the URL.
  */
 function createAssignmentArticle(assignment) {
-  // ... your implementation here ...
-  // 1. Select the section where the assignments will be displayed
-const assignmentListSection = document.getElementById('assignment-list-section');
+const article = document.createElement('article');
+  
+  const h2 = document.createElement('h2');
+  h2.textContent = assignment.title;
+  article.appendChild(h2);
 
-/**
- * 2. Define the function to create the assignment article
- */
-function createAssignmentArticle(assignment) {
-  // Create the root <article> element
-  const article = document.createElement('article');
+  const pDate = document.createElement('p');
+  pDate.textContent = `Due: ${assignment.due_date}`;
+  article.appendChild(pDate);
 
-  // Create the heading for the title
-  const titleHeader = document.createElement('h2');
-  titleHeader.textContent = assignment.title;
-
-  // Create the paragraph for the due date
-  const dueDatePara = document.createElement('p');
-  dueDatePara.textContent = `Due: ${assignment.due_date}`;
-
-  // Create the paragraph for the description
-  const descriptionPara = document.createElement('p');
-  descriptionPara.textContent = assignment.description;
-
-  // Create the link to the details page
-  // We use backticks to inject the assignment.id into the URL string
-  const detailsLink = document.createElement('a');
-  detailsLink.href = `details.html?id=${assignment.id}`;
-  detailsLink.textContent = 'View Details & Discussion';
-
-  // Append (add) all the new elements into the article
-  article.appendChild(titleHeader);
-  article.appendChild(dueDatePara);
-  article.appendChild(descriptionPara);
-  article.appendChild(detailsLink);
-
-  // Return the finished article so it can be added to the page
+  
+  const pDesc = document.createElement('p');
+  pDesc.textContent = assignment.description;
+  article.appendChild(pDesc);
+  
+ 
+  const a = document.createElement('a');
+  a.herf = `details.html?id=${assignment.id}`;
+  a.textContent = "View Details & Discussion";
+  article.appendChild(a);
   return article;
 }
-}
+
+
+
 
 /**
  * TODO: Implement loadAssignments (async).
@@ -108,6 +94,7 @@ function createAssignmentArticle(assignment) {
  *    - Append the returned <article> to the list section.
  */
 async function loadAssignments() {
+ 
   // ... your implementation here ...
   /**
  * Implementation of loadAssignments (async).
