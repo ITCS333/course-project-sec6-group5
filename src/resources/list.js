@@ -13,8 +13,8 @@
 
 // --- Element Selections ---
 // TODO: Select the section for the resource list ('#resource-list-section').
- const resourceList = document.getElementById("resource-list-section");
-// --- Functions ---
+const resourceListSection = document.getElementById("resource-list-section");
+ // --- Functions ---
  
 
 /**
@@ -26,7 +26,7 @@
  */
 function createResourceArticle(resource) {
   // ... your implementation here ...
-   const article = document.createElement("article");
+ const article = document.createElement("article");
 
   const title = document.createElement("h2");
   title.textContent = resource.title;
@@ -58,13 +58,13 @@ function createResourceArticle(resource) {
  *    - Append the returned <article> element to the list section.
  */
 async function loadResources() {
- try {
+  try {
     const response = await fetch("./api/index.php");
     const result = await response.json();
 
-    resourceListSection.innerHTML = "";
+     resourceListSection.innerHTML = "";
 
-    if (result.success) {
+    if (result.success && result.data) {
       result.data.forEach(resource => {
         const article = createResourceArticle(resource);
         resourceListSection.appendChild(article);
@@ -73,9 +73,12 @@ async function loadResources() {
       resourceListSection.textContent = "No resources found.";
     }
   } catch (error) {
-    resourceListSection.textContent = "Error loading resources.";
+     if (resourceListSection) {
+        resourceListSection.textContent = "Error loading resources.";
+    }
     console.error(error);
   }
+ 
 }
 
 // --- Initial Page Load ---
