@@ -87,8 +87,8 @@ function renderTable() {
   
   if (!tbody) return; 
 
-   tbody.innerHTML = "";
-
+   
+  tbody.innerHTML = "";
    resources.forEach(resource => {
     const row = createResourceRow(resource);
     tbody.appendChild(row);
