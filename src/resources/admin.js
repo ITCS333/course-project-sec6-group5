@@ -110,7 +110,7 @@ function renderTable() {
  * 5. Call `renderTable()` to refresh the list.
  * 6. Reset the form.
  */
-function handleAddResource(event) {
+async function handleAddResource(event) {
   // ... your implementation here ...
   event.preventDefault();
 
@@ -177,41 +177,7 @@ function handleAddResource(event) {
  * 7. Call `renderTable()` and reset the form back to "Add" mode,
  *    restoring the submit button text to "Add Resource".
  */
-function handleTableClick(event) {
-  // ... your implementation here ...
-    event.preventDefault();
-
-  const title = document.getElementById("resource-title").value.trim();
-  const description = document.getElementById("resource-description").value.trim();
-  const link = document.getElementById("resource-link").value.trim();
-
-  try {
-    const res = await fetch("./api/index.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ title, description, link })
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      resources.push({
-        id: data.id,
-        title,
-        description,
-        link
-      });
-
-      renderTable();
-      form.reset();
-    }
-
-  } catch (err) {
-    console.error(err);
-  }
-}
+ 
 
 function handleTableClick(event) {
   const target = event.target;
