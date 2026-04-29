@@ -1,82 +1,70 @@
-<?php
+ <?php
 /*
-  Requirement: Create a RESTful API for managing course weeks and comments.
+  Requirement: API for Managing Resources and Comments (Updated to match ResourcesApiTest)
 */
 
- header('Content-Type: application/json');
+header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
- if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
 try {
-    // استدعاء ملف الاتصال بقاعدة البيانات
+    // تأكدي أن هذا المسار صحيح لملف الاتصال بالداتابيز
     require_once __DIR__ . '/../../common/db.php';
     $db = getDBConnection();
 
-    // قراءة نوع الطلب (GET, POST, etc.)
     $method = $_SERVER['REQUEST_METHOD'];
-
-    // قراءة البيانات المرسلة في جسم الطلب (لـ POST و PUT)
     $rawData = file_get_contents('php://input');
     $data = json_decode($rawData, true) ?? [];
 
-    // قراءة المعاملات من الرابط (Query Parameters)
     $action = $_GET['action'] ?? null;
     $id = $_GET['id'] ?? null;
-    $weekId = $_GET['week_id'] ?? null;
+    $resourceId = $_GET['resource_id'] ?? null; // الاختبار يتوقع resource_id للتعليقات
     $commentId = $_GET['comment_id'] ?? null;
-
-    // --- توجيه الطلبات بناءً على الطريقة (Method Routing) ---
 
     if ($method === 'GET') {
         if ($action === 'comments') {
-            getCommentsByWeek($db, $weekId);
+            getCommentsByResource($db, $resourceId);
         } elseif ($id !== null) {
-            getWeekById($db, $id);
+            getResourceById($db, $id);
         } else {
-            getAllWeeks($db);
+            getAllResources($db);
         }
-
     } elseif ($method === 'POST') {
         if ($action === 'comment') {
             createComment($db, $data);
         } else {
-            createWeek($db, $data);
+            createResource($db, $data);
         }
-
     } elseif ($method === 'PUT') {
-        updateWeek($db, $data);
-
+        updateResource($db, $data);
     } elseif ($method === 'DELETE') {
         if ($action === 'delete_comment') {
             deleteComment($db, $commentId);
         } else {
-            deleteWeek($db, $id);
+            deleteResource($db, $id);
         }
-
     } else {
         sendResponse(['success' => false, 'message' => 'Method not allowed.'], 405);
     }
 
 } catch (PDOException $e) {
     error_log($e->getMessage());
-    sendResponse(['success' => false, 'message' => 'Database error occurred.'], 500);
+    sendResponse(['success' => false, 'message' => 'Database error.'], 500);
 } catch (Exception $e) {
     error_log($e->getMessage());
-    sendResponse(['success' => false, 'message' => 'Server error occurred.'], 500);
+    sendResponse(['success' => false, 'message' => 'Server error.'], 500);
 }
 
-// ============================================================================
-// --- الدوال الأساسية (Functions) ---
-// ============================================================================
+// --- Functions ---
 
-function getAllWeeks(PDO $db): void {
-    $query = "SELECT id, title, start_date, description, links, created_at FROM weeks";
+function getAllResources(PDO $db): void {
+    $query = "SELECT id, title, description, link FROM resources";
     $params = [];
 
     if (isset($_GET['search']) && trim($_GET['search']) !== '') {
@@ -85,121 +73,36 @@ function getAllWeeks(PDO $db): void {
         $params[':search'] = '%' . $search . '%';
     }
 
-    $allowedSort = ['title', 'start_date'];
-    $sort = $_GET['sort'] ?? 'start_date';
-    if (!in_array($sort, $allowedSort, true)) $sort = 'start_date';
-
-    $allowedOrder = ['asc', 'desc'];
-    $order = strtolower($_GET['order'] ?? 'asc');
-    if (!in_array($order, $allowedOrder, true)) $order = 'asc';
-
-    $query .= " ORDER BY {$sort} {$order}";
-
     $stmt = $db->prepare($query);
-    foreach ($params as $key => $value) {
-        $stmt->bindValue($key, $value);
-    }
-    $stmt->execute();
-
-    $weeks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($weeks as &$row) {
-        $row['links'] = json_decode($row['links'], true) ?? [];
-    }
-
-    sendResponse(['success' => true, 'data' => $weeks]);
+    $stmt->execute($params);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    sendResponse(['success' => true, 'data' => $results]);
 }
 
-function getWeekById(PDO $db, $id): void {
-    if ($id === null || !is_numeric($id)) {
-        sendResponse(['success' => false, 'message' => 'Invalid week id.'], 400);
-    }
-
-    $stmt = $db->prepare("SELECT id, title, start_date, description, links, created_at FROM weeks WHERE id = ?");
+function getResourceById(PDO $db, $id): void {
+    $stmt = $db->prepare("SELECT id, title, description, link FROM resources WHERE id = ?");
     $stmt->execute([(int)$id]);
-    $week = $stmt->fetch(PDO::FETCH_ASSOC);
+    $res = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($week) {
-        $week['links'] = json_decode($week['links'], true) ?? [];
-        sendResponse(['success' => true, 'data' => $week]);
+    if ($res) {
+        sendResponse(['success' => true, 'data' => $res]);
     } else {
-        sendResponse(['success' => false, 'message' => 'Week not found.'], 404);
+        sendResponse(['success' => false, 'message' => 'Not found.'], 404);
     }
 }
 
-function createWeek(PDO $db, array $data): void {
-    if (!isset($data['title'], $data['start_date']) || trim($data['title']) === '' || trim($data['start_date']) === '') {
-        sendResponse(['success' => false, 'message' => 'Title and start_date are required.'], 400);
-    }
-
-    $title = sanitizeInput($data['title']);
-    $start_date = trim($data['start_date']);
-    $description = sanitizeInput($data['description'] ?? '');
-
-    if (!validateDate($start_date)) {
-        sendResponse(['success' => false, 'message' => 'Invalid start_date format.'], 400);
-    }
-
-    $links = (isset($data['links']) && is_array($data['links'])) ? array_values(array_filter(array_map('trim', $data['links']))) : [];
-    $linksJson = json_encode($links);
-
-    $stmt = $db->prepare("INSERT INTO weeks (title, start_date, description, links) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$title, $start_date, $description, $linksJson]);
-
-    if ($stmt->rowCount() > 0) {
-        sendResponse(['success' => true, 'id' => (int)$db->lastInsertId()], 201);
-    } else {
-        sendResponse(['success' => false, 'message' => 'Failed to create week.'], 500);
-    }
-}
-
-function updateWeek(PDO $db, array $data): void {
-    if (!isset($data['id']) || !is_numeric($data['id'])) {
-        sendResponse(['success' => false, 'message' => 'Week id is required.'], 400);
-    }
-
-    $id = (int)$data['id'];
-    $fields = [];
-    $values = [];
-
-    if (isset($data['title'])) { $fields[] = "title = ?"; $values[] = sanitizeInput($data['title']); }
-    if (isset($data['start_date'])) {
-        if (!validateDate($data['start_date'])) sendResponse(['success' => false, 'message' => 'Invalid date.'], 400);
-        $fields[] = "start_date = ?"; $values[] = trim($data['start_date']);
-    }
-    if (isset($data['description'])) { $fields[] = "description = ?"; $values[] = sanitizeInput($data['description']); }
-    if (isset($data['links'])) { $fields[] = "links = ?"; $values[] = json_encode($data['links']); }
-
-    if (empty($fields)) sendResponse(['success' => false, 'message' => 'No fields to update.'], 400);
-
-    $values[] = $id;
-    $stmt = $db->prepare("UPDATE weeks SET " . implode(', ', $fields) . " WHERE id = ?");
-    if ($stmt->execute($values)) {
-        sendResponse(['success' => true, 'message' => 'Updated successfully.']);
-    } else {
-        sendResponse(['success' => false, 'message' => 'Update failed.'], 500);
-    }
-}
-
-function deleteWeek(PDO $db, $id): void {
-    if (!is_numeric($id)) sendResponse(['success' => false, 'message' => 'Invalid id.'], 400);
-    $stmt = $db->prepare("DELETE FROM weeks WHERE id = ?");
-    $stmt->execute([(int)$id]);
-    if ($stmt->rowCount() > 0) sendResponse(['success' => true]);
-    else sendResponse(['success' => false, 'message' => 'Not found.'], 404);
-}
-
-function getCommentsByWeek(PDO $db, $weekId): void {
-    $stmt = $db->prepare("SELECT * FROM comments_week WHERE week_id = ? ORDER BY created_at ASC");
-    $stmt->execute([(int)$weekId]);
-    sendResponse(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
-}
-
-function createComment(PDO $db, array $data): void {
-    if (empty($data['week_id']) || empty($data['author']) || empty($data['text'])) {
+function createResource(PDO $db, array $data): void {
+    if (empty($data['title']) || empty($data['link'])) {
         sendResponse(['success' => false, 'message' => 'Missing fields.'], 400);
     }
-    $stmt = $db->prepare("INSERT INTO comments_week (week_id, author, text) VALUES (?, ?, ?)");
-    $stmt->execute([(int)$data['week_id'], sanitizeInput($data['author']), sanitizeInput($data['text'])]);
+
+    $stmt = $db->prepare("INSERT INTO resources (title, description, link) VALUES (?, ?, ?)");
+    $stmt->execute([
+        sanitizeInput($data['title']),
+        sanitizeInput($data['description'] ?? ''),
+        trim($data['link'])
+    ]);
+
     if ($stmt->rowCount() > 0) {
         sendResponse(['success' => true, 'id' => (int)$db->lastInsertId()], 201);
     } else {
@@ -207,23 +110,73 @@ function createComment(PDO $db, array $data): void {
     }
 }
 
-function deleteComment(PDO $db, $commentId): void {
-    $stmt = $db->prepare("DELETE FROM comments_week WHERE id = ?");
-    $stmt->execute([(int)$commentId]);
-    sendResponse(['success' => $stmt->rowCount() > 0]);
+function updateResource(PDO $db, array $data): void {
+    if (empty($data['id'])) sendResponse(['success' => false], 400);
+    
+    // تأكدي من وجود المورد أولاً ليعيد 404 إذا لم يوجد
+    $check = $db->prepare("SELECT id FROM resources WHERE id = ?");
+    $check->execute([$data['id']]);
+    if (!$check->fetch()) sendResponse(['success' => false], 404);
+
+    $fields = []; $values = [];
+    if (isset($data['title'])) { $fields[] = "title = ?"; $values[] = sanitizeInput($data['title']); }
+    if (isset($data['description'])) { $fields[] = "description = ?"; $values[] = sanitizeInput($data['description']); }
+    if (isset($data['link'])) { $fields[] = "link = ?"; $values[] = trim($data['link']); }
+
+    $values[] = $data['id'];
+    $stmt = $db->prepare("UPDATE resources SET " . implode(', ', $fields) . " WHERE id = ?");
+    sendResponse(['success' => $stmt->execute($values)]);
 }
 
-// --- Utility Functions ---
+function deleteResource(PDO $db, $id): void {
+    if (!$id) sendResponse(['success' => false], 400);
+    
+    $stmt = $db->prepare("DELETE FROM resources WHERE id = ?");
+    $stmt->execute([$id]);
+    
+    if ($stmt->rowCount() > 0) sendResponse(['success' => true]);
+    else sendResponse(['success' => false], 404);
+}
 
-function sendResponse(array $data, int $statusCode = 200): void {
-    http_response_code($statusCode);
-    echo json_encode($data, JSON_PRETTY_PRINT);
+function getCommentsByResource(PDO $db, $resourceId): void {
+    if (!$resourceId) sendResponse(['success' => false], 400);
+    $stmt = $db->prepare("SELECT id, resource_id, author, text, created_at FROM comments_resource WHERE resource_id = ?");
+    $stmt->execute([$resourceId]);
+    sendResponse(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+}
+
+function createComment(PDO $db, array $data): void {
+    if (empty($data['resource_id']) || empty($data['author']) || empty($data['text'])) {
+        sendResponse(['success' => false], 400);
+    }
+    
+    // التحقق من وجود المورد (ليعطي 404 إذا كان الـ resource_id غير صحيح)
+    $check = $db->prepare("SELECT id FROM resources WHERE id = ?");
+    $check->execute([$data['resource_id']]);
+    if (!$check->fetch()) sendResponse(['success' => false], 404);
+
+    $stmt = $db->prepare("INSERT INTO comments_resource (resource_id, author, text) VALUES (?, ?, ?)");
+    $stmt->execute([(int)$data['resource_id'], sanitizeInput($data['author']), sanitizeInput($data['text'])]);
+    
+    if ($stmt->rowCount() > 0) {
+        sendResponse(['success' => true, 'id' => (int)$db->lastInsertId()], 201);
+    } else {
+        sendResponse(['success' => false], 500);
+    }
+}
+
+function deleteComment(PDO $db, $id): void {
+    if (!$id) sendResponse(['success' => false], 400);
+    $stmt = $db->prepare("DELETE FROM comments_resource WHERE id = ?");
+    $stmt->execute([$id]);
+    if ($stmt->rowCount() > 0) sendResponse(['success' => true]);
+    else sendResponse(['success' => false], 404);
+}
+
+function sendResponse(array $data, int $code = 200): void {
+    http_response_code($code);
+    echo json_encode($data);
     exit;
-}
-
-function validateDate(string $date): bool {
-    $d = DateTime::createFromFormat('Y-m-d', $date);
-    return $d && $d->format('Y-m-d') === $date;
 }
 
 function sanitizeInput(string $data): string {
