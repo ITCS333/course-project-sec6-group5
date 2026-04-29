@@ -13,7 +13,7 @@
 
 // --- Element Selections ---
 // TODO: Select the section for the resource list ('#resource-list-section').
-const resourceListSection = document.getElementById("resource-list-section");
+ const resourceList = document.getElementById("resource-list-section");
 // --- Functions ---
  
 
