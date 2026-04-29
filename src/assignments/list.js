@@ -71,9 +71,10 @@ const article = document.createElement('article');
   
  
   const a = document.createElement('a');
-  a.herf = 'details.html?id=' + assignment.id;
+  a.href = 'details.html?id=' + assignment.id;
   a.textContent = "View Details & Discussion";
   article.appendChild(a);
+  
   return article;
 }
 
@@ -94,16 +95,7 @@ const article = document.createElement('article');
  *    - Append the returned <article> to the list section.
  */
 async function loadAssignments() {
- const section = document.getElementById('aasignment-list-section');
- const response = await fetch('./api/index.php');  
- const result = await response.json(); 
-
-   if (result.success){
-     section.innerHTML = "";
-     result.data.forEach(assignment => {
-       const article = createAssignmentArticle(assignment);
-       section.appendChild(article);
-     });
+ 
   
   // ... your implementation here ...
   /**
