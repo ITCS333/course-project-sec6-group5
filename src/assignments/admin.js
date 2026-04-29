@@ -56,39 +56,20 @@ let assignments = [];
  */
 function createAssignmentRow(assignment) {
   const tr = document.createElement('tr');
-
-  const tdTitle = document.createElement('td');
-  tdTitle.textContent = assignment.title;
-  tr.appendChild(tdTitle);
-
-  const tdDueDate = document.createElement('td');
-  tdDueDate.textContent = assignment.due_date;
-  tr.appendChild(tdDueDate);
-
-  const tdDescription = document.createElement('td');
-  tdDescription.textContent = assignment.description;
-  tr.appendChild(tdDescription);
-
-  const tdActions = document.createElement('td');
-
-  const editBtn = document.createElement('button');
-  editBtn.className = 'edit-btn';
-  editBtn.setAttribute('data-id', assignment.id);
-  editBtn.textContent = 'Edit';
-  tdActions.appendChild(editBtn);
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'delete-btn';
-  deleteBtn.setAttribute('data-id', assignment.id);
-  deleteBtn.textContent = 'Delete';
-  tdActions.appendChild(deleteBtn);
-
-  tr.appendChild(tdActions);
+  tr.innerHTML=`
+  <td>${assignment.tittle}</td>
+  <td>${assignment.due_date}</td>
+  td>${assignment.description}</td>
+  <td>
+ <button class="edit-btn" data-id="${assignment.id}">Edit</button>
+ <button class="delete-btn" data-id="${assignment.id}">Delete</button> 
+ </td>
+ `;
   return tr;
-  
-  // ... your implementation here ...
 }
+  
 
+ 
 /**
  * TODO: Implement renderTable.
  *
@@ -99,12 +80,10 @@ function createAssignmentRow(assignment) {
  *    append the <tr> to the table body.
  */
 function renderTable() {
-  const tbody = document.getElementById('assignments-body');
-  tbody.innerHTML ="";
-
-  assignments.forEach(assignment =>{
-    const row = createAssignmentRow(assignment);
-    tbody.appendChild(row);
+  assignmentsTbody.innerHTML= '';
+  assignments.forEach(assignment => {
+  const tr = document.createAssignmentRow(assignment);
+  assignmentsTbody.appendChild(tr);
   });
   // ... your implementation here ...
 }
