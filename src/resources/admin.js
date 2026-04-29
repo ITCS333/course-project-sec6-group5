@@ -83,7 +83,7 @@ function createResourceRow(resource) {
  */
 function renderTable() {
   // ... your implementation here ...
-  const tbody = document.getElementById("resources-tbody");
+ const tbody = document.getElementById("resources-tbody");
   
   if (!tbody) return; 
 
@@ -93,7 +93,6 @@ function renderTable() {
     const row = createResourceRow(resource);
     tbody.appendChild(row);
   });
-  
 }
 
 /**
