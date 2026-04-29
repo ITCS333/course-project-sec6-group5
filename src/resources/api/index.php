@@ -1,6 +1,7 @@
- <?php
+<?php
 /*
-  Requirement: API for Managing Resources and Comments (Updated to match ResourcesApiTest)
+  Requirement: API for Managing Resources and Comments 
+  Status: Final Version - URL Validation & Created_at Field Included
 */
 
 header('Content-Type: application/json');
@@ -14,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 try {
-    // تأكدي أن هذا المسار صحيح لملف الاتصال بالداتابيز
     require_once __DIR__ . '/../../common/db.php';
     $db = getDBConnection();
 
@@ -24,7 +24,7 @@ try {
 
     $action = $_GET['action'] ?? null;
     $id = $_GET['id'] ?? null;
-    $resourceId = $_GET['resource_id'] ?? null; // الاختبار يتوقع resource_id للتعليقات
+    $resourceId = $_GET['resource_id'] ?? null; 
     $commentId = $_GET['comment_id'] ?? null;
 
     if ($method === 'GET') {
@@ -64,7 +64,8 @@ try {
 // --- Functions ---
 
 function getAllResources(PDO $db): void {
-    $query = "SELECT id, title, description, link FROM resources";
+    // تم إضافة created_at هنا
+    $query = "SELECT id, title, description, link, created_at FROM resources";
     $params = [];
 
     if (isset($_GET['search']) && trim($_GET['search']) !== '') {
@@ -80,7 +81,8 @@ function getAllResources(PDO $db): void {
 }
 
 function getResourceById(PDO $db, $id): void {
-    $stmt = $db->prepare("SELECT id, title, description, link FROM resources WHERE id = ?");
+    // تم إضافة created_at هنا
+    $stmt = $db->prepare("SELECT id, title, description, link, created_at FROM resources WHERE id = ?");
     $stmt->execute([(int)$id]);
     $res = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -94,6 +96,11 @@ function getResourceById(PDO $db, $id): void {
 function createResource(PDO $db, array $data): void {
     if (empty($data['title']) || empty($data['link'])) {
         sendResponse(['success' => false, 'message' => 'Missing fields.'], 400);
+    }
+
+    // التحقق من صحة الرابط (URL Validation)
+    if (!filter_var($data['link'], FILTER_VALIDATE_URL)) {
+        sendResponse(['success' => false, 'message' => 'Invalid URL format.'], 400);
     }
 
     $stmt = $db->prepare("INSERT INTO resources (title, description, link) VALUES (?, ?, ?)");
@@ -113,7 +120,11 @@ function createResource(PDO $db, array $data): void {
 function updateResource(PDO $db, array $data): void {
     if (empty($data['id'])) sendResponse(['success' => false], 400);
     
-    // تأكدي من وجود المورد أولاً ليعيد 404 إذا لم يوجد
+    // التحقق من صحة الرابط إذا تم إرساله للتحديث
+    if (isset($data['link']) && !filter_var($data['link'], FILTER_VALIDATE_URL)) {
+        sendResponse(['success' => false, 'message' => 'Invalid URL format.'], 400);
+    }
+
     $check = $db->prepare("SELECT id FROM resources WHERE id = ?");
     $check->execute([$data['id']]);
     if (!$check->fetch()) sendResponse(['success' => false], 404);
@@ -150,7 +161,6 @@ function createComment(PDO $db, array $data): void {
         sendResponse(['success' => false], 400);
     }
     
-    // التحقق من وجود المورد (ليعطي 404 إذا كان الـ resource_id غير صحيح)
     $check = $db->prepare("SELECT id FROM resources WHERE id = ?");
     $check->execute([$data['resource_id']]);
     if (!$check->fetch()) sendResponse(['success' => false], 404);
@@ -181,4 +191,4 @@ function sendResponse(array $data, int $code = 200): void {
 
 function sanitizeInput(string $data): string {
     return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
-}
+} 
