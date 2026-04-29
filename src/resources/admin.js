@@ -85,17 +85,20 @@ function renderTable() {
   // ... your implementation here ...
  const tbody = document.getElementById("resources-tbody");
   
-  if (!tbody) return; 
+  // تأمين: إذا لم يجد العنصر لا يكمل (عشان ما يطلع error)
+  if (!tbody) return;
 
-  // 1. مسح المحتوى (هذا يحل JS-22)
+  // 1. مسح محتوى الجدول (مهم لـ JS-22)
   tbody.innerHTML = "";
 
-  // 2. التحقق من وجود بيانات في مصفوفة resources
-  // تأكدي أن كلمة resources هنا تطابق اسم المصفوفة المعرفة في أعلى الملف
-  if (resources && resources.length > 0) {
-    resources.forEach(resource => {
+  // 2. رسم الصفوف (مهم لـ JS-23)
+  // استخدمنا window.resources للتأكد أننا نقرأ المصفوفة العالمية الصحيحة
+  const dataToRender = window.resources || resources;
+
+  if (dataToRender && dataToRender.length > 0) {
+    dataToRender.forEach(resource => {
       const row = createResourceRow(resource);
-      tbody.appendChild(row); // هذا يحل JS-23
+      tbody.appendChild(row);
     });
   }
 }
@@ -285,8 +288,7 @@ async function loadAndInitialize() {
       renderTable();
     }
 
-    // ربط الأحداث مباشرة بالعناصر لضمان الدقة
-    const form = document.getElementById("resource-form");
+     const form = document.getElementById("resource-form");
     if (form) {
       form.addEventListener("submit", handleAddResource);
     }
