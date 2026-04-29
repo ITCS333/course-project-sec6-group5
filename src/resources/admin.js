@@ -87,12 +87,17 @@ function renderTable() {
   
   if (!tbody) return; 
 
-   
+  // 1. مسح المحتوى (هذا يحل JS-22)
   tbody.innerHTML = "";
-   resources.forEach(resource => {
-    const row = createResourceRow(resource);
-    tbody.appendChild(row);
-  });
+
+  // 2. التحقق من وجود بيانات في مصفوفة resources
+  // تأكدي أن كلمة resources هنا تطابق اسم المصفوفة المعرفة في أعلى الملف
+  if (resources && resources.length > 0) {
+    resources.forEach(resource => {
+      const row = createResourceRow(resource);
+      tbody.appendChild(row); // هذا يحل JS-23
+    });
+  }
 }
 
 /**
@@ -271,7 +276,7 @@ function handleTableClick(event) {
  */
 async function loadAndInitialize() {
   // ... your implementation here ...
-   try {
+ try {
     const res = await fetch("./api/index.php");
     const data = await res.json();
 
@@ -280,11 +285,19 @@ async function loadAndInitialize() {
       renderTable();
     }
 
-    form.addEventListener("submit", handleAddResource);
-    tableBody.addEventListener("click", handleTableClick);
+    // ربط الأحداث مباشرة بالعناصر لضمان الدقة
+    const form = document.getElementById("resource-form");
+    if (form) {
+      form.addEventListener("submit", handleAddResource);
+    }
+
+    const tbody = document.getElementById("resources-tbody");
+    if (tbody) {
+      tbody.addEventListener("click", handleTableClick);
+    }
 
   } catch (err) {
-    console.error(err);
+    console.error("Initialization error:", err);
   }
 }
 
