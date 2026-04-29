@@ -17,8 +17,12 @@ let resources = [];
 
 // --- Element Selections ---
 // TODO: Select the resource form ('#resource-form').
+const form = document.getElementById("resource-form");
+
 
 // TODO: Select the resources table body ('#resources-tbody').
+const tableBody = document.getElementById("resources-tbody");
+
 
 // --- Functions ---
 
@@ -35,6 +39,38 @@ let resources = [];
  */
 function createResourceRow(resource) {
   // ... your implementation here ...
+  const tr = document.createElement("tr");
+
+  const tdTitle = document.createElement("td");
+  tdTitle.textContent = resource.title;
+
+  const tdDesc = document.createElement("td");
+  tdDesc.textContent = resource.description;
+
+  const tdLink = document.createElement("td");
+  tdLink.textContent = resource.link;
+
+  const tdActions = document.createElement("td");
+
+  const editBtn = document.createElement("button");
+  editBtn.textContent = "Edit";
+  editBtn.className = "edit-btn";
+  editBtn.dataset.id = resource.id;
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "Delete";
+  deleteBtn.className = "delete-btn";
+  deleteBtn.dataset.id = resource.id;
+
+  tdActions.appendChild(editBtn);
+  tdActions.appendChild(deleteBtn);
+
+  tr.appendChild(tdTitle);
+  tr.appendChild(tdDesc);
+  tr.appendChild(tdLink);
+  tr.appendChild(tdActions);
+
+  return tr;
 }
 
 /**
@@ -47,6 +83,12 @@ function createResourceRow(resource) {
  */
 function renderTable() {
   // ... your implementation here ...
+  tableBody.innerHTML = "";
+
+  resources.forEach(resource => {
+    const row = createResourceRow(resource);
+    tableBody.appendChild(row);
+  });
 }
 
 /**
@@ -70,6 +112,38 @@ function renderTable() {
  */
 function handleAddResource(event) {
   // ... your implementation here ...
+  event.preventDefault();
+
+  const title = document.getElementById("resource-title").value.trim();
+  const description = document.getElementById("resource-description").value.trim();
+  const link = document.getElementById("resource-link").value.trim();
+
+  try {
+    const res = await fetch("./api/index.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ title, description, link })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      resources.push({
+        id: data.id,
+        title,
+        description,
+        link
+      });
+
+      renderTable();
+      form.reset();
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 /**
@@ -105,6 +179,110 @@ function handleAddResource(event) {
  */
 function handleTableClick(event) {
   // ... your implementation here ...
+    event.preventDefault();
+
+  const title = document.getElementById("resource-title").value.trim();
+  const description = document.getElementById("resource-description").value.trim();
+  const link = document.getElementById("resource-link").value.trim();
+
+  try {
+    const res = await fetch("./api/index.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ title, description, link })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      resources.push({
+        id: data.id,
+        title,
+        description,
+        link
+      });
+
+      renderTable();
+      form.reset();
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function handleTableClick(event) {
+  const target = event.target;
+
+  const id = target.dataset.id;
+  if (!id) return;
+
+  // DELETE
+  if (target.classList.contains("delete-btn")) {
+    fetch(`./api/index.php?id=${id}`, {
+      method: "DELETE"
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        resources = resources.filter(r => r.id != id);
+        renderTable();
+      }
+    });
+  }
+
+  // EDIT
+  if (target.classList.contains("edit-btn")) {
+    const resource = resources.find(r => r.id == id);
+
+    document.getElementById("resource-title").value = resource.title;
+    document.getElementById("resource-description").value = resource.description;
+    document.getElementById("resource-link").value = resource.link;
+
+    const submitBtn = document.getElementById("add-resource");
+    submitBtn.textContent = "Update Resource";
+
+    form.onsubmit = async function (e) {
+      e.preventDefault();
+
+      const updatedTitle = document.getElementById("resource-title").value.trim();
+      const updatedDesc = document.getElementById("resource-description").value.trim();
+      const updatedLink = document.getElementById("resource-link").value.trim();
+
+      const res = await fetch("./api/index.php", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          id,
+          title: updatedTitle,
+          description: updatedDesc,
+          link: updatedLink
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const index = resources.findIndex(r => r.id == id);
+        resources[index] = {
+          id,
+          title: updatedTitle,
+          description: updatedDesc,
+          link: updatedLink
+        };
+
+        renderTable();
+        form.reset();
+        submitBtn.textContent = "Add Resource";
+
+        form.onsubmit = handleAddResource;
+      }
+    };
+  }
 }
 
 /**
@@ -123,6 +301,21 @@ function handleTableClick(event) {
  */
 async function loadAndInitialize() {
   // ... your implementation here ...
+   try {
+    const res = await fetch("./api/index.php");
+    const data = await res.json();
+
+    if (data.success) {
+      resources = data.data;
+      renderTable();
+    }
+
+    form.addEventListener("submit", handleAddResource);
+    tableBody.addEventListener("click", handleTableClick);
+
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 // --- Initial Page Load ---
