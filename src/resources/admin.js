@@ -21,7 +21,7 @@ const form = document.getElementById("resource-form");
 
 
 // TODO: Select the resources table body ('#resources-tbody').
-const tableBody = document.getElementById("resources-tbody");
+ 
 
 
 // --- Functions ---
