@@ -62,10 +62,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // TODO: Get the PDO database connection by calling getDBConnection().
 
-require_once _DIR_ . "/../../config/db.php";
-$db = getDBConnection();
+require_once _DIR_ . "/../../../config/db.php"; 
 
-
+try {
+    $db = getDBConnection();
+} catch (PDOException $e) {
+    sendResponse("Database connection failed", 500);
+}
 // TODO: Read the HTTP request method from $_SERVER['REQUEST_METHOD'].
 
 
