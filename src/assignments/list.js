@@ -71,7 +71,7 @@ const article = document.createElement('article');
   
  
   const a = document.createElement('a');
-  a.herf = `details.html?id=${assignment.id}`;
+  a.herf = 'details.html?id=' + assignment.id;
   a.textContent = "View Details & Discussion";
   article.appendChild(a);
   return article;
