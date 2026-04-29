@@ -83,12 +83,17 @@ function createResourceRow(resource) {
  */
 function renderTable() {
   // ... your implementation here ...
-  tableBody.innerHTML = "";
+  const tbody = document.getElementById("resources-tbody");
+  
+  if (!tbody) return; 
 
-  resources.forEach(resource => {
+   tbody.innerHTML = "";
+
+   resources.forEach(resource => {
     const row = createResourceRow(resource);
-    tableBody.appendChild(row);
+    tbody.appendChild(row);
   });
+  
 }
 
 /**
