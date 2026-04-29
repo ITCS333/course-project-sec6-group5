@@ -94,7 +94,17 @@ const article = document.createElement('article');
  *    - Append the returned <article> to the list section.
  */
 async function loadAssignments() {
- 
+ const section = document.getElementById('aasignment-list-section');
+ const response = await fetch('./api/index.php');  
+ const result = await response.json(); 
+
+   if (result.success){
+     section.innerHTML = "";
+     result.data.forEach(assignment => {
+       const article = createAssignmentArticle(assignment);
+       section.appendChild(article);
+     });
+  
   // ... your implementation here ...
   /**
  * Implementation of loadAssignments (async).
