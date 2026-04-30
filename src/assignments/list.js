@@ -103,33 +103,20 @@ async function loadAssignments() {
  */
 async function loadAssignments() {
   try {
-    // 1. Use fetch() to GET data from the API
     const response = await fetch('./api/index.php');
-    
-    // 2. Parse the JSON response
     const result = await response.json();
 
-    // Check if the API call was successful and we have data
-    if (result.success && Array.isArray(result.data)) {
+    
+    if (result.success) {
       
-      // 3. Clear any existing content from the list section
-      // This prevents assignments from duplicating if the function is called twice
       assignmentListSection.innerHTML = '';
-
-      // 4. Loop through the data array
       result.data.forEach(assignment => {
-        // Call your previously created function
         const article = createAssignmentArticle(assignment);
-        
-        // Append the returned <article> to the list section
         assignmentListSection.appendChild(article);
       });
-    } else {
-      console.error('Failed to load assignments:', result);
-    }
+    } 
   } catch (error) {
-    // It's good practice to catch network errors
-    console.error('Error fetching assignments:', error);
+      console.error('Error loading assignments:', error);
   }
 }
 
