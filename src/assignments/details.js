@@ -174,7 +174,7 @@ async function handleAddComment(event) {
   const commentText = newCommentInput.value.trim();
   if(commentText === ""){
     return;
-  }
+  
   const response = await fetch('./api/index.php?action=comment', {
     method: 'POST',
     body: JSON.stringify({
@@ -182,9 +182,9 @@ async function handleAddComment(event) {
          author:"Student",            
          text:commentText
        })
-  }):
+  });
   const result = await response.json();
-  if(result.success === true){
+  if(result.success){
     currentComments.push(result.data);
     renderComments();
     newCommentInput = "";
@@ -223,12 +223,12 @@ async function initializePage() {
   // ... your implementation here ...
   currentAssignmentId = getAssignmentIdFromURL();
   if(!currentAssignmentId)
-    assignmentTitle.textContent = "Assignment not found.";
+    if(assignmentTitle) assignmentTitle.textContent = "Assignment not found.";
    return;
 }
 try {
   const [assignmentRes, commentsRes] = await Promise.all([
-    fetch(`./api/index.php?id=${assignmentId}`),
+    fetch(`./api/index.php?id=${currentAssignmentId}`),
     fetch(`./api/index.php?action=comments&assignment_id=${currentAssignmentId}`)
     ]);
   const assignmentResult = await assignmentRes.json();
