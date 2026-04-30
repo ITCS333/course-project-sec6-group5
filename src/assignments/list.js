@@ -53,7 +53,6 @@
  * Important: the href MUST be "details.html?id=<id>" (integer id from
  * the assignments table) so that details.js can read the id from the URL.
  */
-const assignmentListSection = document.getElementById('assignment-list-section');
 
 function createAssignmentArticle(assignment) {
 const article = document.createElement('article');
@@ -97,13 +96,6 @@ const article = document.createElement('article');
  *    - Append the returned <article> to the list section.
  */
 async function loadAssignments() {
- 
-  
-  // ... your implementation here ...
-  /**
- * Implementation of loadAssignments (async).
- */
-
   try {
     const response = await fetch('./api/index.php');
     const result = await response.json();
@@ -112,6 +104,7 @@ async function loadAssignments() {
     if (result.success) {
       
       assignmentListSection.innerHTML = '';
+      
       result.data.forEach(assignment => {
         const article = createAssignmentArticle(assignment);
         assignmentListSection.appendChild(article);
@@ -124,7 +117,7 @@ async function loadAssignments() {
 
 // Call the function to start the process
 loadAssignments();
-}
+
 
 // --- Initial Page Load ---
 
