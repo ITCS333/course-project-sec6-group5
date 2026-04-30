@@ -103,7 +103,7 @@ async function loadAssignments() {
   /**
  * Implementation of loadAssignments (async).
  */
-async function loadAssignments() {
+
   try {
     const response = await fetch('./api/index.php');
     const result = await response.json();
