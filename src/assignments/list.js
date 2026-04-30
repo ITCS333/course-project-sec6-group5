@@ -53,6 +53,7 @@
  * Important: the href MUST be "details.html?id=<id>" (integer id from
  * the assignments table) so that details.js can read the id from the URL.
  */
+const assignmentListSection = document.getElementById('assignment-list-section');
 
 function createAssignmentArticle(assignment) {
 const article = document.createElement('article');
