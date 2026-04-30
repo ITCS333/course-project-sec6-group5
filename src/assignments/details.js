@@ -70,7 +70,7 @@ function getAssignmentIdFromURL() {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get('id');}
   // ... your implementation here ...
-}
+
 
 /**
  * TODO: Implement renderAssignmentDetails.
@@ -193,6 +193,7 @@ async function handleAddComment(event) {
   
   // ... your implementation here ...
 }
+}
 
 /**
  * TODO: Implement initializePage (async).
@@ -222,7 +223,7 @@ async function handleAddComment(event) {
 async function initializePage() {
   // ... your implementation here ...
   currentAssignmentId = getAssignmentIdFromURL();
-  if(!currentAssignmentId)
+  if(!currentAssignmentId){
     if(assignmentTitle) assignmentTitle.textContent = "Assignment not found.";
    return;
 }
