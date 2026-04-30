@@ -164,6 +164,25 @@ async function handleAddComment(event) {
  */
 async function initializePage() {
   // ... your implementation here ...
+  if(!assignmentId) return;
+  const data = await fetch(`./api/index.php?id=${assignmentId}`);
+
+  if(result.success){
+    const data = result.data;
+    document.getElementById('assignment-title').textContent = data.title;
+    document.getElementById('assignment-due-date').textContent = 'Due: ' + data.due-date;
+    document.getElementById('assignment-description').textContent = data.description;
+
+    const fileList = document.getElementById('assignment-file-list');
+    fileList.innerHTML = "";
+    data.files.forEach(url => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.herf = url;
+      a.textContent = url;
+      li.appendChild(a);
+      fileList.appendChild(li);
+    });
 }
 
 // --- Initial Page Load ---
