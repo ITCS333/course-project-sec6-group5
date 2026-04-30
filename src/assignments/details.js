@@ -39,13 +39,6 @@
 */
 
 // --- Global Data Store ---
-let currentAssignmentId = null;
-let currentComments     = [];
-
-// --- Element Selections ---
-// TODO: Select each element by its id:
-//   assignmentTitle, assignmentDueDate, assignmentDescription,
-//   assignmentFilesList, commentList, commentForm, newCommentInput.
 const assignmentTitle = document.getElementById('assignment-tittle');
 const assignmentDueDate = document.getElementById('assignment-due-date');
 const assignmentDescription = document.getElementById('assignment-description');
@@ -53,6 +46,14 @@ const assignmentFilesList = document.getElementById('assignment-files-list');
 const commentList = document.getElementById('comment-list');
 const commentForm = document.getElementById('comment-form');
 const newCommentInput = document.getElementById('new-comment');
+
+let currentAssignmentId = null;
+let currentComments     = [];
+
+// --- Element Selections ---
+// TODO: Select each element by its id:
+//   assignmentTitle, assignmentDueDate, assignmentDescription,
+//   assignmentFilesList, commentList, commentForm, newCommentInput.
 
 // --- Functions ---
 
