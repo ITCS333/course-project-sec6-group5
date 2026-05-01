@@ -21,7 +21,7 @@ function renderWeekDetails(week) {
 
   weekLinksList.innerHTML = "";
 
-  week.links.forEach(function (url) {
+  week.links.forEach(url => {
     const li = document.createElement("li");
     const a = document.createElement("a");
 
@@ -51,7 +51,7 @@ function createCommentArticle(comment) {
 function renderComments() {
   commentList.innerHTML = "";
 
-  currentComments.forEach(function (comment) {
+  currentComments.forEach(comment => {
     const article = createCommentArticle(comment);
     commentList.appendChild(article);
   });
@@ -63,7 +63,7 @@ async function handleAddComment(event) {
   const commentText = newCommentInput.value.trim();
   if (!commentText) return;
 
-  const response = await fetch("api/index.php?action=reply", {
+  const response = await fetch("./api/index.php?action=comment", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -93,8 +93,8 @@ async function initializePage() {
   }
 
   const [weekRes, commentsRes] = await Promise.all([
-    fetch(`api/index.php?id=${currentWeekId}`),
-    fetch(`api/index.php?action=replies&week_id=${currentWeekId}`)
+    fetch(`./api/index.php?id=${currentWeekId}`),
+    fetch(`./api/index.php?action=comments&week_id=${currentWeekId}`)
   ]);
 
   const weekData = await weekRes.json();
