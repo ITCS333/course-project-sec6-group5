@@ -1,17 +1,12 @@
-// 1. اختيار العناصر الأساسية من الصفحة
+// 1. اختيار العناصر الأساسية
 const assignmentForm = document.getElementById('assignment-form');
 const assignmentsTbody = document.getElementById('assignments-tbody');
 
-// مصفوفة لتخزين البيانات محلياً
 let assignments = [];
 
-/**
- * [JS-24, JS-25, JS-26] إنشاء صف في الجدول
- * يجب أن يحتوي على أربعة أعمدة وأزرار تعديل وحذف
- */
+// [JS-24, JS-25, JS-26] إنشاء صف في الجدول
 function createAssignmentRow(assignment) {
     const tr = document.createElement('tr');
-
     tr.innerHTML = `
         <td>${assignment.title}</td>
         <td>${assignment.due_date}</td>
@@ -21,48 +16,43 @@ function createAssignmentRow(assignment) {
             <button class="delete-btn" data-id="${assignment.id}">Delete</button>
         </td>
     `;
-
     return tr;
 }
 
-/**
- * [JS-27, JS-28] مسح الجدول وإعادة عرض البيانات
- */
+// [JS-27, JS-28] عرض الجدول
 function renderTable() {
     if (!assignmentsTbody) return;
-    
-    // مسح المحتوى القديم (JS-27)
     assignmentsTbody.innerHTML = ''; 
-    
-    // إضافة الصفوف الجديدة (JS-28)
     assignments.forEach(assignment => {
         const row = createAssignmentRow(assignment);
         assignmentsTbody.appendChild(row);
     });
 }
 
-/**
- * [JS-29, JS-30] معالجة إضافة واجب جديد
- */
+// [JS-29, JS-30] إضافة واجب جديد (تم التعديل لتجاوز خطأ FormData)
 async function handleAddAssignment(event) {
-    // منع التحديث الافتراضي للصفحة (JS-29)
     event.preventDefault(); 
 
-    const titleInput = document.querySelector('[name="title"]');
-    const dateInput = document.querySelector('[name="due_date"]');
-      const desInput = document.querySelector('[name="description"]');
-      const filesInput = document.querySelector('[name="files"]');
+    // جلب القيم يدوياً باستخدام id أو name لضمان عملها في بيئة الاختبار
+    const title = document.querySelector('[name="title"]').value;
+    const due_date = document.querySelector('[name="due_date"]').value;
+    const description = document.querySelector('[name="description"]').value;
+    const filesInput = document.querySelector('[name="files"]');
+    const files = filesInput && filesInput.value ? filesInput.value.split(',') : [];
+
     const newAssignment = {
-        title: formData.get('title'),
-        due_date: formData.get('due_date'),
-        description: formData.get('description'),
-        files: formData.get('files') ? formData.get('files').split(',') : []
+        title: title,
+        due_date: due_date,
+        description: description,
+        files: files
     };
 
     try {
-        // إرسال البيانات للسيرفر (JS-30)
         const response = await fetch('./api/index.php', {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(newAssignment)
         });
 
@@ -70,15 +60,14 @@ async function handleAddAssignment(event) {
         if (result.success) {
             assignments.push(result.data);
             renderTable();
-            assignmentForm.reset(); // تصفير النموذج
+            if (assignmentForm) assignmentForm.reset(); 
         }
     } catch (error) {
         console.error("Error adding assignment:", error);
     }
 }
 
-/**
- */
+// جلب البيانات الأولية
 async function loadAdminData() {
     try {
         const response = await fetch('./api/index.php');
@@ -92,7 +81,7 @@ async function loadAdminData() {
     }
 }
 
-// 2. ربط الأحداث وتشغيل الصفحة
+// ربط الأحداث
 if (assignmentForm) {
     assignmentForm.addEventListener('submit', handleAddAssignment);
 }
