@@ -11,7 +11,7 @@ const newCommentInput = document.getElementById("new-comment");
 
 function getWeekIdFromURL() {
   const params = new URLSearchParams(window.location.search);
-  return params.get("id");
+  return Number(params.get("id"));
 }
 
 function renderWeekDetails(week) {
@@ -21,7 +21,7 @@ function renderWeekDetails(week) {
 
   weekLinksList.innerHTML = "";
 
-  week.links.forEach(url => {
+  week.links.forEach((url) => {
     const li = document.createElement("li");
     const a = document.createElement("a");
 
@@ -51,17 +51,16 @@ function createCommentArticle(comment) {
 function renderComments() {
   commentList.innerHTML = "";
 
-  currentComments.forEach(comment => {
-    const article = createCommentArticle(comment);
-    commentList.appendChild(article);
+  currentComments.forEach((comment) => {
+    commentList.appendChild(createCommentArticle(comment));
   });
 }
 
 async function handleAddComment(event) {
   event.preventDefault();
 
-  const commentText = newCommentInput.value.trim();
-  if (!commentText) return;
+  const text = newCommentInput.value.trim();
+  if (!text) return;
 
   const response = await fetch("./api/index.php?action=comment", {
     method: "POST",
@@ -69,15 +68,15 @@ async function handleAddComment(event) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      week_id: Number(currentWeekId),
+      week_id: currentWeekId,
       author: "Student",
-      text: commentText
+      text: text
     })
   });
 
   const result = await response.json();
 
-  if (result.success === true) {
+  if (result && result.success) {
     currentComments.push(result.data);
     renderComments();
     newCommentInput.value = "";
@@ -100,10 +99,10 @@ async function initializePage() {
   const weekData = await weekRes.json();
   const commentsData = await commentsRes.json();
 
-  const week = weekData.data || null;
-  currentComments = commentsData.data || [];
+  const week = weekData?.data || null;
+  currentComments = commentsData?.data || [];
 
-  if (weekData.success && week) {
+  if (weekData && weekData.success && week) {
     renderWeekDetails(week);
     renderComments();
     commentForm.addEventListener("submit", handleAddComment);
