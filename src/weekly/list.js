@@ -1,16 +1,3 @@
-/*
-  Requirement: Populate the "Weekly Course Breakdown" list page.
-
-  Instructions:
-  1. This file is already linked to `list.html` via:
-         <script src="list.js" defer></script>
-
-  2. In `list.html`, the <section id="week-list-section"> is the container
-     that this script populates.
-
-  3. Implement the TODOs below.
-*/
-
 // --- Element Selections ---
 const weekListSection = document.getElementById("week-list-section");
 
@@ -33,12 +20,16 @@ async function loadWeeks() {
   const response = await fetch("./api/index.php");
   const result = await response.json();
 
+  // Clear previous content
   weekListSection.innerHTML = "";
 
-  if (result.success === true && result.data) {
+  if (result.success === true) {
     result.data.forEach(function (week) {
-      weekListSection.appendChild(createWeekArticle(week));
+      const article = createWeekArticle(week);
+      weekListSection.appendChild(article);
     });
+  } else {
+    weekListSection.textContent = "Failed to load weeks.";
   }
 }
 
