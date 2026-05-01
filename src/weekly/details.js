@@ -1,43 +1,3 @@
-/*
-  Requirement: Populate the weekly detail page and handle the discussion forum.
-
-  Instructions:
-  1. This file is already linked to `details.html` via:
-         <script src="details.js" defer></script>
-
-  2. The following ids must exist in details.html (already listed in the
-     HTML comments):
-       #week-title          — <h1>
-       #week-start-date     — <p>
-       #week-description    — <p>
-       #week-links-list     — <ul>
-       #comment-list        — <div>
-       #comment-form        — <form>
-       #new-comment         — <textarea>
-
-  3. Implement the TODOs below.
-
-  API base URL: ./api/index.php
-  Week object shape returned by the API:
-    {
-      id:          number,
-      title:       string,
-      start_date:  string,
-      description: string,
-      links:       string[]
-    }
-
-  Comment object shape returned by the API
-  (from the comments_week table):
-    {
-      id:          number,
-      week_id:     number,
-      author:      string,
-      text:        string,
-      created_at:  string
-    }
-*/
-
 // --- Global Data Store ---
 let currentWeekId = null;
 let currentComments = [];
@@ -71,7 +31,6 @@ function renderWeekDetails(week) {
 
     a.href = url;
     a.textContent = url;
-    a.target = "_blank";
 
     li.appendChild(a);
     weekLinksList.appendChild(li);
@@ -97,26 +56,26 @@ function renderComments() {
   commentList.innerHTML = "";
 
   currentComments.forEach(function (comment) {
-    commentList.appendChild(createCommentArticle(comment));
+    const article = createCommentArticle(comment);
+    commentList.appendChild(article);
   });
 }
 
 async function handleAddComment(event) {
   event.preventDefault();
 
-  const text = newCommentInput.value.trim();
+  const commentText = newCommentInput.value.trim();
+  if (!commentText) return;
 
-  if (!text) return;
-
-  const response = await fetch("./api/index.php?action=comment", {
+  const response = await fetch("api/index.php?action=comment", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      week_id: currentWeekId,
+      week_id: Number(currentWeekId),
       author: "Student",
-      text: text
+      text: commentText
     })
   });
 
@@ -137,20 +96,15 @@ async function initializePage() {
     return;
   }
 
-  const weekPromise = fetch(`./api/index.php?id=${currentWeekId}`);
-  const commentsPromise = fetch(
-    `./api/index.php?action=comments&week_id=${currentWeekId}`
-  );
-
   const [weekRes, commentsRes] = await Promise.all([
-    weekPromise,
-    commentsPromise
+    fetch(`api/index.php?id=${currentWeekId}`),
+    fetch(`api/index.php?action=comments&week_id=${currentWeekId}`)
   ]);
 
   const weekData = await weekRes.json();
   const commentsData = await commentsRes.json();
 
-  const week = weekData.data;
+  const week = weekData.data || null;
   currentComments = commentsData.data || [];
 
   if (weekData.success && week) {
