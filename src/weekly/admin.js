@@ -23,9 +23,8 @@ function createWeekRow(week) {
 function renderTable() {
   tableBody.innerHTML = "";
 
-  weeks.forEach(function (week) {
-    const row = createWeekRow(week);
-    tableBody.appendChild(row);
+  weeks.forEach((week) => {
+    tableBody.appendChild(createWeekRow(week));
   });
 }
 
@@ -37,62 +36,43 @@ async function handleAddWeek(event) {
   const description = document.getElementById("week-description").value.trim();
   const links = document.getElementById("week-links").value
     .split("\n")
-    .map(l => l.trim())
-    .filter(l => l !== "");
+    .map((l) => l.trim())
+    .filter((l) => l);
 
   const editId = submitBtn.dataset.editId;
 
   if (editId) {
-    await handleUpdateWeek(Number(editId), {
-      title,
-      start_date,
-      description,
-      links
-    });
+    await handleUpdateWeek(Number(editId), { title, start_date, description, links });
     return;
   }
 
-  const response = await fetch("api/index.php", {
+  const response = await fetch("./api/index.php", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ title, start_date, description, links })
   });
 
   const result = await response.json();
 
-  if (result.success) {
-    weeks.push({
-      id: result.id,
-      title,
-      start_date,
-      description,
-      links
-    });
-
+  if (result && result.success) {
+    weeks.push({ id: result.id, title, start_date, description, links });
     renderTable();
     form.reset();
   }
 }
 
 async function handleUpdateWeek(id, fields) {
-  const response = await fetch("api/index.php", {
+  const response = await fetch("./api/index.php", {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, ...fields })
   });
 
   const result = await response.json();
 
-  if (result.success) {
-    const index = weeks.findIndex(w => w.id === id);
-
-    if (index !== -1) {
-      weeks[index] = { id, ...fields };
-    }
+  if (result && result.success) {
+    const index = weeks.findIndex((w) => w.id === id);
+    if (index !== -1) weeks[index] = { id, ...fields };
 
     renderTable();
     form.reset();
@@ -106,20 +86,17 @@ async function handleTableClick(event) {
   const id = Number(target.dataset.id);
 
   if (target.classList.contains("delete-btn")) {
-    const response = await fetch(`api/index.php?id=${id}`, {
-      method: "DELETE"
-    });
-
+    const response = await fetch(`./api/index.php?id=${id}`, { method: "DELETE" });
     const result = await response.json();
 
-    if (result.success) {
-      weeks = weeks.filter(w => w.id !== id);
+    if (result && result.success) {
+      weeks = weeks.filter((w) => w.id !== id);
       renderTable();
     }
   }
 
   if (target.classList.contains("edit-btn")) {
-    const week = weeks.find(w => w.id === id);
+    const week = weeks.find((w) => w.id === id);
     if (!week) return;
 
     document.getElementById("week-title").value = week.title;
@@ -133,10 +110,10 @@ async function handleTableClick(event) {
 }
 
 async function loadAndInitialize() {
-  const response = await fetch("api/index.php");
+  const response = await fetch("./api/index.php");
   const result = await response.json();
 
-  if (result.success) {
+  if (result && result.success) {
     weeks = result.data || [];
     renderTable();
   }
