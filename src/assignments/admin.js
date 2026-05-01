@@ -29,6 +29,8 @@
 
 // --- Global Data Store ---
 // Holds the assignments currently displayed in the table.
+const assignmentForm = document.getElementById('assignment-form');
+const assignmentTbody = document.getElementById('assignment-tbody');
 let assignments = [];
 
 // --- Element Selections ---
@@ -82,7 +84,7 @@ function createAssignmentRow(assignment) {
 function renderTable() {
   assignmentsTbody.innerHTML= '';
   assignments.forEach(assignment => {
-  const tr = document.createAssignmentRow(assignment);
+  const row = document.createAssignmentRow(assignment);
   assignmentsTbody.appendChild(tr);
   });
   // ... your implementation here ...
@@ -114,32 +116,31 @@ function renderTable() {
  */
 async function handleAddAssignment(event) {
   event.preventDefult();
-  const title = document.getElementById('assignment-title').value;
-  const due-date = document.getElementById('assignment-due-date').value;
-  const description = document.getElementById('assignment-description').value; 
-  const filesRaw = document.getElementById('assignment-files').value; 
-
-  const files = filesRaw.split('\n').filter(line=> line.trim() !== "";
-  const editId = submitBtn.getAttribute('data-edit-id');
-
-  if(editId){
-    await handleUpdateAssignment(editId);
-  } else{
+  const formData = new FormData(assignmentForm);
+  const newAssignment ={
+    title:formData.get('title'),
+    due_date: formData.get(' due_date'),
+    description: formData.get(' description'),
+    files:formData.get('files')? formData.get('files').spilt(',') : []
+  };
+    try{
     const response = await fetch('./api/index.php',{
       method: 'POST',
-      body: JSON.stringify({ title, due-date, description, files}),
-      headers: { 'Content-Type': 'application/json'}
+      body: JSON.stringify(newAssignment),
     });
 const result = await response.json();
-if(result.succes === true){
-  const newAssignment ={ id: result.id, title, due_date, description, files };
-  assignment.push(newAssignment);
-
+if(result.succes){
+  assignment.push(resultdata);
   renderTable();
-  event.target.reset();
+  assignmentForm.reset();
   }
-  // ... your implementation here ...
+    }catch (error){
+      console.error("Error adding assignment:". error);
+    }
 }
+                    
+  // ... your implementation here ...
+
 
 /**
  * TODO: Implement handleUpdateAssignment (async).
