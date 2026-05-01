@@ -15,14 +15,15 @@ function getWeekIdFromURL() {
 }
 
 function renderWeekDetails(week) {
-  weekTitle.textContent = week.title;
-  weekStartDate.textContent = "Starts on: " + week.start_date;
-  weekDescription.textContent = week.description;
+  if (!week) return;   
+
+  weekTitle.textContent = week.title || "";
+  weekStartDate.textContent = "Starts on: " + (week.start_date || "");
+  weekDescription.textContent = week.description || "";
 
   weekLinksList.innerHTML = "";
 
-  
-  const links = week.links || [];
+  const links = Array.isArray(week.links) ? week.links : [];
 
   links.forEach((url) => {
     const li = document.createElement("li");
@@ -40,10 +41,10 @@ function createCommentArticle(comment) {
   const article = document.createElement("article");
 
   const p = document.createElement("p");
-  p.textContent = comment.text;
+  p.textContent = comment?.text || "";
 
   const footer = document.createElement("footer");
-  footer.textContent = "Posted by: " + comment.author;
+  footer.textContent = "Posted by: " + (comment?.author || "");
 
   article.appendChild(p);
   article.appendChild(footer);
@@ -54,7 +55,9 @@ function createCommentArticle(comment) {
 function renderComments() {
   commentList.innerHTML = "";
 
-  currentComments.forEach((comment) => {
+  const comments = Array.isArray(currentComments) ? currentComments : [];
+
+  comments.forEach((comment) => {
     commentList.appendChild(createCommentArticle(comment));
   });
 }
@@ -80,6 +83,7 @@ async function handleAddComment(event) {
   const result = await response.json();
 
   if (result && result.success) {
+    currentComments = Array.isArray(currentComments) ? currentComments : [];
     currentComments.push(result.data);
     renderComments();
     newCommentInput.value = "";
@@ -103,7 +107,7 @@ async function initializePage() {
   const commentsData = await commentsRes.json();
 
   const week = weekData?.data || null;
-  currentComments = commentsData?.data || [];
+  currentComments = Array.isArray(commentsData?.data) ? commentsData.data : [];
 
   if (weekData && weekData.success && week) {
     renderWeekDetails(week);
