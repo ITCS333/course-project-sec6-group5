@@ -1,4 +1,7 @@
+// --- Element Selections ---
 const weekListSection = document.getElementById("week-list-section");
+
+// --- Functions ---
 
 function createWeekArticle(week) {
   const article = document.createElement("article");
@@ -15,14 +18,19 @@ function createWeekArticle(week) {
 
 async function loadWeeks() {
   const response = await fetch("api/index.php");
-  const data = await response.json();
+  const result = await response.json();
 
   weekListSection.innerHTML = "";
 
-  data.forEach(week => {
-    const article = createWeekArticle(week);
-    weekListSection.appendChild(article);
-  });
+  if (result.success === true) {
+    const weeks = result.data || [];
+
+    weeks.forEach(function (week) {
+      const article = createWeekArticle(week);
+      weekListSection.appendChild(article);
+    });
+  }
 }
 
+// --- Initial Page Load ---
 loadWeeks();
