@@ -1,12 +1,8 @@
-// --- Global Data Store ---
 let weeks = [];
 
-// --- Element Selections ---
 const form = document.getElementById("week-form");
 const tableBody = document.getElementById("weeks-tbody");
 const submitBtn = document.getElementById("add-week");
-
-// --- Functions ---
 
 function createWeekRow(week) {
   const tr = document.createElement("tr");
@@ -27,7 +23,7 @@ function createWeekRow(week) {
 function renderTable() {
   tableBody.innerHTML = "";
 
-  weeks.forEach(week => {
+  weeks.forEach(function (week) {
     const row = createWeekRow(week);
     tableBody.appendChild(row);
   });
@@ -39,9 +35,7 @@ async function handleAddWeek(event) {
   const title = document.getElementById("week-title").value.trim();
   const start_date = document.getElementById("week-start-date").value;
   const description = document.getElementById("week-description").value.trim();
-  const links = document
-    .getElementById("week-links")
-    .value
+  const links = document.getElementById("week-links").value
     .split("\n")
     .map(l => l.trim())
     .filter(l => l !== "");
@@ -151,5 +145,4 @@ async function loadAndInitialize() {
   tableBody.addEventListener("click", handleTableClick);
 }
 
-// --- Initial Page Load ---
 loadAndInitialize();
