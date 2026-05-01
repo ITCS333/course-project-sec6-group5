@@ -1,7 +1,4 @@
-// --- Element Selections ---
 const weekListSection = document.getElementById("week-list-section");
-
-// --- Functions ---
 
 function createWeekArticle(week) {
   const article = document.createElement("article");
@@ -32,5 +29,4 @@ async function loadWeeks() {
   }
 }
 
-// --- Initial Page Load ---
 loadWeeks();
