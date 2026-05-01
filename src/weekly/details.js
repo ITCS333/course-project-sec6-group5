@@ -1,8 +1,6 @@
-// --- Global Data Store ---
 let currentWeekId = null;
 let currentComments = [];
 
-// --- Element Selections ---
 const weekTitle = document.getElementById("week-title");
 const weekStartDate = document.getElementById("week-start-date");
 const weekDescription = document.getElementById("week-description");
@@ -10,8 +8,6 @@ const weekLinksList = document.getElementById("week-links-list");
 const commentList = document.getElementById("comment-list");
 const commentForm = document.getElementById("comment-form");
 const newCommentInput = document.getElementById("new-comment");
-
-// --- Functions ---
 
 function getWeekIdFromURL() {
   const params = new URLSearchParams(window.location.search);
@@ -67,7 +63,7 @@ async function handleAddComment(event) {
   const commentText = newCommentInput.value.trim();
   if (!commentText) return;
 
-  const response = await fetch("api/index.php?action=comment", {
+  const response = await fetch("api/index.php?action=reply", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -98,7 +94,7 @@ async function initializePage() {
 
   const [weekRes, commentsRes] = await Promise.all([
     fetch(`api/index.php?id=${currentWeekId}`),
-    fetch(`api/index.php?action=comments&week_id=${currentWeekId}`)
+    fetch(`api/index.php?action=replies&week_id=${currentWeekId}`)
   ]);
 
   const weekData = await weekRes.json();
@@ -116,5 +112,4 @@ async function initializePage() {
   }
 }
 
-// --- Initial Page Load ---
 initializePage();
