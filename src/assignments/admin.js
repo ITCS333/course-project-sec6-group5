@@ -48,7 +48,10 @@ async function handleAddAssignment(event) {
     // منع التحديث الافتراضي للصفحة (JS-29)
     event.preventDefault(); 
 
-    const formData = new FormData(assignmentForm);
+    const titleInput = document.querySelector('[name="title"]');
+    const dateInput = document.querySelector('[name="due_date"]');
+      const desInput = document.querySelector('[name="description"]');
+      const filesInput = document.querySelector('[name="files"]');
     const newAssignment = {
         title: formData.get('title'),
         due_date: formData.get('due_date'),
