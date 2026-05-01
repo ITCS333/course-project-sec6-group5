@@ -14,7 +14,7 @@ function createWeekArticle(week) {
 }
 
 async function loadWeeks() {
-  const response = await fetch("api/index.php");
+  const response = await fetch("./api/index.php");
   const result = await response.json();
 
   weekListSection.innerHTML = "";
@@ -22,7 +22,7 @@ async function loadWeeks() {
   if (result.success === true) {
     const weeks = result.data || [];
 
-    weeks.forEach(function (week) {
+    weeks.forEach(week => {
       const article = createWeekArticle(week);
       weekListSection.appendChild(article);
     });
