@@ -44,12 +44,10 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
-
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
-
 // TODO: Handle preflight OPTIONS request.
 // If the request method is OPTIONS, return HTTP 200 and exit.
 
@@ -102,11 +100,12 @@ $method = $_SERVER['REQUEST_METHOD'];
 $rawInput = file_get_contents("php://input");
 $data = json_decode($rawInput, true) ?? [];
 
+
 $id = isset($_GET['id']) ? (int)$_GET['id'] : (isset($data['id']) ? (int)$data['id'] : null);
 $action = $_GET['action'] ?? null;
 $search = $_GET['search'] ?? null;
 $sort = $_GET['sort'] ?? null;
-$order = $_GET['order'] ?? 'asc'
+$order = $_GET['order'] ?? 'asc';
 
 
 function getUsers($db) {
@@ -145,7 +144,6 @@ global $search, $sort, $order;
     $stmt->execute($params);
     sendResponse($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
-
 /**
  * Function: Get a single user by primary key.
  * Method: GET with ?id=<int>
@@ -311,7 +309,7 @@ function deleteUser($db, $id) {
     // TODO: If successful, call sendResponse() with a success message and HTTP 200.
     //       If the query fails, call sendResponse() with HTTP 500.
 if (!$id) sendResponse("ID required", 400);
-    
+
     $stmt = $db->prepare("SELECT id FROM users WHERE id = :id");
     $stmt->execute([":id" => $id]);
     if (!$stmt->fetch()) sendResponse("User not found", 404);
@@ -373,9 +371,17 @@ if (empty($data['id']) || empty($data['current_password']) || empty($data['new_p
 
 try {
    if ($method === 'GET') {
-        $id ? getUserById($db, $id) : getUsers($db);
+        if ($id) {
+            getUserById($db, $id);
+        } else {
+            getUsers($db);
+        }
     } elseif ($method === 'POST') {
-        ($action === 'change_password') ? changePassword($db, $data) : createUser($db, $data);
+        if ($action === 'change_password') {
+            changePassword($db, $data);
+        } else {
+            createUser($db, $data);
+        }
     } elseif ($method === 'PUT') {
         updateUser($db, $data);
     } elseif ($method === 'DELETE') {
@@ -384,7 +390,7 @@ try {
         sendResponse("Method not allowed", 405);
     }
 } catch (Exception $e) {
-    sendResponse("Server error: " . $e->getMessage(), 500);
+    sendResponse("Server error", 500);
 }
 // ============================================================================
 // HELPER FUNCTIONS
@@ -406,11 +412,20 @@ function sendResponse($data, $statusCode = 200) {
     //       Otherwise echo:
     //         json_encode(['success' => false, 'message' => $data])
 http_response_code($statusCode);
+
     if ($statusCode < 400) {
-        echo json_encode(["success" => true, "data" => $data]);
-    } else {
-        echo json_encode(["success" => false, "message" => $data]);
+        echo json_encode([
+            "success" => true, 
+            "data" => $data
+        ]);
+    } 
+    else {
+        echo json_encode([
+            "success" => false, 
+            "message" => $data
+        ]);
     }
+    
     exit;
 }
 /**
