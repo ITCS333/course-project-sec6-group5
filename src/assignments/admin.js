@@ -29,30 +29,26 @@ function renderTable() {
     });
 }
 
-// [JS-29, JS-30] إضافة واجب جديد (تم التعديل لتجاوز خطأ FormData)
+// [JS-29, JS-30] إضافة واجب جديد
 async function handleAddAssignment(event) {
-    event.preventDefault(); 
+    if (event) event.preventDefault(); 
 
-    // جلب القيم يدوياً باستخدام id أو name لضمان عملها في بيئة الاختبار
-    const title = document.querySelector('[name="title"]').value;
-    const due_date = document.querySelector('[name="due_date"]').value;
-    const description = document.querySelector('[name="description"]').value;
-    const filesInput = document.querySelector('[name="files"]');
-    const files = filesInput && filesInput.value ? filesInput.value.split(',') : [];
+    // اختيار المدخلات بطريقة آمنة لتجنب خطأ الـ null
+    const titleEl = document.querySelector('[name="title"]');
+    const dateEl = document.querySelector('[name="due_date"]');
+    const descEl = document.querySelector('[name="description"]');
+    const filesEl = document.querySelector('[name="files"]');
 
     const newAssignment = {
-        title: title,
-        due_date: due_date,
-        description: description,
-        files: files
+        title: titleEl ? titleEl.value : '',
+        due_date: dateEl ? dateEl.value : '',
+        description: descEl ? descEl.value : '',
+        files: (filesEl && filesEl.value) ? filesEl.value.split(',') : []
     };
 
     try {
         const response = await fetch('./api/index.php', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify(newAssignment)
         });
 
@@ -63,7 +59,7 @@ async function handleAddAssignment(event) {
             if (assignmentForm) assignmentForm.reset(); 
         }
     } catch (error) {
-        console.error("Error adding assignment:", error);
+        console.error("Error:", error);
     }
 }
 
@@ -77,7 +73,7 @@ async function loadAdminData() {
             renderTable();
         }
     } catch (error) {
-        console.error("Error loading data:", error);
+        console.error("Error:", error);
     }
 }
 
