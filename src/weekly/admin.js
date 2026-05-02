@@ -1,10 +1,18 @@
+// --- Global Data Store ---
 let weeks = [];
 
+// --- Element Selections ---
+// TODO: Select the week form by id 'week-form'.
 const form = document.getElementById("week-form");
+
+// TODO: Select the weeks table body by id 'weeks-tbody'.
 const tableBody = document.getElementById("weeks-tbody");
 const submitBtn = document.getElementById("add-week");
 
+// --- Functions ---
+
 function createWeekRow(week) {
+  // TODO: Implement createWeekRow.
   const tr = document.createElement("tr");
 
   tr.innerHTML = `
@@ -21,82 +29,118 @@ function createWeekRow(week) {
 }
 
 function renderTable() {
+  // TODO: Implement renderTable.
   tableBody.innerHTML = "";
 
-  weeks.forEach((week) => {
-    tableBody.appendChild(createWeekRow(week));
+  weeks.forEach(week => {
+    const row = createWeekRow(week);
+    tableBody.appendChild(row);
   });
 }
 
 async function handleAddWeek(event) {
+  // TODO: Implement handleAddWeek (async).
   event.preventDefault();
 
-  const title = document.getElementById("week-title").value.trim();
+  const title = document.getElementById("week-title").value;
   const start_date = document.getElementById("week-start-date").value;
-  const description = document.getElementById("week-description").value.trim();
-  const links = document.getElementById("week-links").value
+  const description = document.getElementById("week-description").value;
+
+  const links = document
+    .getElementById("week-links")
+    .value
     .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l);
+    .map(link => link.trim())
+    .filter(link => link !== "");
 
   const editId = submitBtn.dataset.editId;
 
+  // If editing → update
   if (editId) {
-    await handleUpdateWeek(Number(editId), { title, start_date, description, links });
+    await handleUpdateWeek(editId, { title, start_date, description, links });
     return;
   }
 
+  // Otherwise → create new
   const response = await fetch("./api/index.php", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({ title, start_date, description, links })
   });
 
   const result = await response.json();
 
-  if (result && result.success) {
-    weeks.push({ id: result.id, title, start_date, description, links });
+  if (result.success) {
+    weeks.push({
+      id: result.id,
+      title,
+      start_date,
+      description,
+      links
+    });
+
     renderTable();
     form.reset();
   }
 }
 
 async function handleUpdateWeek(id, fields) {
+  // TODO: Implement handleUpdateWeek (async).
   const response = await fetch("./api/index.php", {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, ...fields })
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      id: Number(id),
+      ...fields
+    })
   });
 
   const result = await response.json();
 
-  if (result && result.success) {
-    const index = weeks.findIndex((w) => w.id === id);
-    if (index !== -1) weeks[index] = { id, ...fields };
+  if (result.success) {
+    const index = weeks.findIndex(w => w.id == id);
+
+    if (index !== -1) {
+      weeks[index] = { id: Number(id), ...fields };
+    }
 
     renderTable();
     form.reset();
+
     submitBtn.textContent = "Add Week";
-    submitBtn.removeAttribute("data-edit-id");
+    delete submitBtn.dataset.editId;
   }
 }
 
 async function handleTableClick(event) {
+  // TODO: Implement handleTableClick (async).
   const target = event.target;
-  const id = Number(target.dataset.id);
 
+  // DELETE
   if (target.classList.contains("delete-btn")) {
-    const response = await fetch(`./api/index.php?id=${id}`, { method: "DELETE" });
+    const id = target.dataset.id;
+
+    const response = await fetch(`./api/index.php?id=${id}`, {
+      method: "DELETE"
+    });
+
     const result = await response.json();
 
-    if (result && result.success) {
-      weeks = weeks.filter((w) => w.id !== id);
+    if (result.success) {
+      weeks = weeks.filter(w => w.id != id);
       renderTable();
     }
   }
 
+  // EDIT
   if (target.classList.contains("edit-btn")) {
-    const week = weeks.find((w) => w.id === id);
+    const id = target.dataset.id;
+    const week = weeks.find(w => w.id == id);
+
     if (!week) return;
 
     document.getElementById("week-title").value = week.title;
@@ -110,11 +154,12 @@ async function handleTableClick(event) {
 }
 
 async function loadAndInitialize() {
+  // TODO: Implement loadAndInitialize (async).
   const response = await fetch("./api/index.php");
   const result = await response.json();
 
-  if (result && result.success) {
-    weeks = result.data || [];
+  if (result.success) {
+    weeks = result.data;
     renderTable();
   }
 
@@ -122,4 +167,5 @@ async function loadAndInitialize() {
   tableBody.addEventListener("click", handleTableClick);
 }
 
+// --- Initial Page Load ---
 loadAndInitialize();
