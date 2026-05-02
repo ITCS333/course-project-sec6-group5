@@ -1,10 +1,10 @@
-// 1. اختيار العناصر الأساسية
+و// 1. اختيار العناصر
 const assignmentForm = document.getElementById('assignment-form');
 const assignmentsTbody = document.getElementById('assignments-tbody');
 
 let assignments = [];
 
-// [JS-24, JS-25, JS-26] إنشاء صف في الجدول
+// [JS-24, JS-25, JS-26] إنشاء صف الجدول
 function createAssignmentRow(assignment) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -33,7 +33,6 @@ function renderTable() {
 async function handleAddAssignment(event) {
     if (event) event.preventDefault(); 
 
-    // اختيار المدخلات بطريقة آمنة لتجنب خطأ الـ null
     const titleEl = document.querySelector('[name="title"]');
     const dateEl = document.querySelector('[name="due_date"]');
     const descEl = document.querySelector('[name="description"]');
@@ -59,12 +58,35 @@ async function handleAddAssignment(event) {
             if (assignmentForm) assignmentForm.reset(); 
         }
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error adding assignment:", error);
     }
 }
 
-// جلب البيانات الأولية
-async function loadAdminData() {
+// [JS-31, JS-32] معالجة النقر داخل الجدول (تعديل وحذف)
+async function handleTableClick(event) {
+    const target = event.target;
+    const id = target.getAttribute('data-id');
+
+    if (target.classList.contains('delete-btn')) {
+        // [JS-31] حذف الواجب
+        const response = await fetch(`./api/index.php?id=${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (result.success) {
+            assignments = assignments.filter(a => a.id != id);
+            renderTable();
+        }
+    } else if (target.classList.contains('edit-btn')) {
+        // [JS-32] تعبئة النموذج للتعديل
+        const assignment = assignments.find(a => a.id == id);
+        if (assignment) {
+            document.querySelector('[name="title"]').value = assignment.title;
+            document.querySelector('[name="due_date"]').value = assignment.due_date;
+            document.querySelector('[name="description"]').value = assignment.description;
+        }
+    }
+}
+
+async function loadAndInitialize() {
     try {
         const response = await fetch('./api/index.php');
         const result = await response.json();
@@ -72,14 +94,18 @@ async function loadAdminData() {
             assignments = result.data;
             renderTable();
         }
+        
+        // ربط الأحداث (JS-35)
+        if (assignmentForm) {
+            assignmentForm.addEventListener('submit', handleAddAssignment);
+        }
+        if (assignmentsTbody) {
+            assignmentsTbody.addEventListener('click', handleTableClick);
+        }
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error initialization:", error);
     }
 }
 
-// ربط الأحداث
-if (assignmentForm) {
-    assignmentForm.addEventListener('submit', handleAddAssignment);
-}
-
-loadAdminData();
+// تشغيل الدالة النهائية المطلوبة في الاختبار
+loadAndInitialize();
