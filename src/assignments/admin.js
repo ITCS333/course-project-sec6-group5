@@ -1,10 +1,9 @@
-// 1. تعريف العناصر الأساسية
+// 1. التعريفات
 const assignmentForm = document.getElementById('assignment-form');
 const assignmentsTbody = document.getElementById('assignments-tbody');
-
 let assignments = [];
 
-// [JS-24, JS-25, JS-26] إنشاء صف الجدول
+// [JS-24, JS-25, JS-26] إنشاء الصف
 function createAssignmentRow(assignment) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -24,24 +23,25 @@ function renderTable() {
     if (!assignmentsTbody) return;
     assignmentsTbody.innerHTML = ''; 
     assignments.forEach(assignment => {
-        const row = createAssignmentRow(assignment);
-        assignmentsTbody.appendChild(row);
+        assignmentsTbody.appendChild(createAssignmentRow(assignment));
     });
 }
 
-// [JS-29, JS-30] إضافة واجب جديد
+// [JS-29, JS-30] إضافة واجب - تعديل جذري لضمان قراءة البيانات
 async function handleAddAssignment(event) {
     if (event) event.preventDefault(); 
 
-    const titleInput = document.querySelector('[name="title"]');
-    const dateInput = document.querySelector('[name="due_date"]');
-    const descInput = document.querySelector('[name="description"]');
+    // جلب العناصر في لحظة الضغط بالضبط
+    const titleVal = document.querySelector('[name="title"]')?.value || "";
+    const dateVal = document.querySelector('[name="due_date"]')?.value || "";
+    const descVal = document.querySelector('[name="description"]')?.value || "";
+    const filesVal = document.querySelector('[name="files"]')?.value || "";
 
     const newAssignment = {
-        title: titleInput ? titleInput.value : '',
-        due_date: dateInput ? dateInput.value : '',
-        description: descInput ? descInput.value : '',
-        files: [] 
+        title: titleVal,
+        due_date: dateVal,
+        description: descVal,
+        files: filesVal ? filesVal.split(',') : []
     };
 
     try {
@@ -58,7 +58,7 @@ async function handleAddAssignment(event) {
     } catch (error) { console.error(error); }
 }
 
-// [JS-31, JS-32] التعديل والحذف (تمت إضافة الحماية هنا لحل خطأ الصورة 75)
+// [JS-31, JS-32] التعديل والحذف
 async function handleTableClick(event) {
     const target = event.target;
     const id = target.getAttribute('data-id');
@@ -74,14 +74,12 @@ async function handleTableClick(event) {
     } else if (target.classList.contains('edit-btn')) {
         const assignment = assignments.find(a => a.id == id);
         if (assignment) {
-            // الحماية: التأكد من وجود العناصر قبل وضع القيمة (Value)
-            const titleInput = document.querySelector('[name="title"]');
-            const dateInput = document.querySelector('[name="due_date"]');
-            const descInput = document.querySelector('[name="description"]');
-
-            if (titleInput) titleInput.value = assignment.title;
-            if (dateInput) dateInput.value = assignment.due_date;
-            if (descInput) descInput.value = assignment.description;
+            const t = document.querySelector('[name="title"]');
+            const d = document.querySelector('[name="due_date"]');
+            const s = document.querySelector('[name="description"]');
+            if (t) t.value = assignment.title;
+            if (d) d.value = assignment.due_date;
+            if (s) s.value = assignment.description;
         }
     }
 }
@@ -95,18 +93,13 @@ async function loadAndInitialize() {
             assignments = result.data;
             renderTable();
         }
-        
-        // ربط الأحداث فقط إذا كانت العناصر موجودة
         if (assignmentForm) {
-            assignmentForm.removeEventListener('submit', handleAddAssignment);
-            assignmentForm.addEventListener('submit', handleAddAssignment);
+            assignmentForm.onsubmit = handleAddAssignment;
         }
         if (assignmentsTbody) {
-            assignmentsTbody.removeEventListener('click', handleTableClick);
-            assignmentsTbody.addEventListener('click', handleTableClick);
+            assignmentsTbody.onclick = handleTableClick;
         }
     } catch (error) { console.error(error); }
 }
 
-// تشغيل الدالة النهائية
 loadAndInitialize();
