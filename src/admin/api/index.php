@@ -62,8 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // TODO: Get the PDO database connection by calling getDBConnection().
 
-require_once _DIR_ . "/../../../config/db.php"; 
-
+require_once __DIR__ . "/../../../config/db.php";
 try {
     $db = getDBConnection();
 } catch (PDOException $e) {
@@ -104,7 +103,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true) ?? [];
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+$id = isset($_GET['id']) ? (int)$_GET['id'] : (isset($data['id']) ? (int)$data['id'] : null);
 $action = $_GET['action'] ?? null;
 $search = $_GET['search'] ?? null;
 $sort = $_GET['sort'] ?? null;
@@ -130,8 +129,7 @@ function getUsers($db) {
     // TODO: Fetch all rows as an associative array.
 
     // TODO: Call sendResponse() with the array and HTTP status 200.
-global $search, $sort, $order;
-
+global $search, $sort, $order; 
     $query = "SELECT id, name, email, is_admin, created_at FROM users";
     $params = [];
 
@@ -142,7 +140,7 @@ global $search, $sort, $order;
 
     $allowedSort = ["name", "email", "is_admin"];
     if (!empty($sort) && in_array($sort, $allowedSort)) {
-        $orderDir = strtolower($order) === "desc" ? "DESC" : "ASC";
+        $orderDir = strtoupper($order) === "DESC" ? "DESC" : "ASC";
         $query .= " ORDER BY $sort $orderDir";
     }
 
@@ -280,15 +278,14 @@ function updateUser($db, $data) {
     // TODO: If successful, call sendResponse() with a success message and HTTP 200.
     //       If no rows were affected, still return HTTP 200 (no change is not an error).
     //       If the query fails, call sendResponse() with HTTP 500.
-
- if (empty($data['id'])) {
+if (empty($data['id'])) {
         sendResponse("ID required", 400);
     }
 
-    $stmt = $db->prepare("SELECT id FROM users WHERE id = :id");
-    $stmt->execute([":id" => $data['id']]);
-    if (!$stmt->fetch()) {
-        sendResponse("User not found", 404);
+    $checkUser = $db->prepare("SELECT id FROM users WHERE id = :id");
+    $checkUser->execute([":id" => $data['id']]);
+    if (!$checkUser->fetch()) {
+        sendResponse("User not found", 404); 
     }
 
     $fields = [];
@@ -296,16 +293,24 @@ function updateUser($db, $data) {
 
     if (!empty($data['name'])) {
         $fields[] = "name = :name";
-        $params[':name'] = sanitizeInput($data['name']);
+        $params[':name'] = htmlspecialchars(strip_tags(trim($data['name'])));
     }
 
     if (!empty($data['email'])) {
-        if (!validateEmail($data['email'])) sendResponse("Invalid email", 400);
-        $check = $db->prepare("SELECT id FROM users WHERE email = :email AND id != :id");
-        $check->execute([":email" => $data['email'], ":id" => $data['id']]);
-        if ($check->fetch()) sendResponse("Email already exists", 409);
+        $email = trim($data['email']);
+        
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            sendResponse("Invalid email format", 400);
+        }
+
+        $checkEmail = $db->prepare("SELECT id FROM users WHERE email = :email AND id != :id");
+        $checkEmail->execute([":email" => $email, ":id" => $data['id']]);
+        if ($checkEmail->fetch()) {
+            sendResponse("Email already in use", 409); 
+        }
+
         $fields[] = "email = :email";
-        $params[':email'] = $data['email'];
+        $params[':email'] = $email;
     }
 
     if (isset($data['is_admin'])) {
@@ -313,14 +318,20 @@ function updateUser($db, $data) {
         $params[':is_admin'] = (int)$data['is_admin'];
     }
 
-    if (!$fields) sendResponse("No changes made", 200);
+    if (empty($fields)) {
+        sendResponse("No fields to update", 400);
+    }
 
-    $query = "UPDATE users SET " . implode(", ", $fields) . " WHERE id = :id";
-    $stmt = $db->prepare($query);
-    $stmt->execute($params);
-    sendResponse("Updated successfully");
+    try {
+        $sql = "UPDATE users SET " . implode(", ", $fields) . " WHERE id = :id";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        
+        sendResponse("User updated successfully", 200);
+    } catch (PDOException $e) {
+        sendResponse("Update failed: " . $e->getMessage(), 500);
+    }
 }
-
 
 /**
  * Function: Delete a user by primary key.
@@ -415,10 +426,8 @@ try {
     } else {
         sendResponse("Method not allowed", 405);
     }
-} catch (PDOException $e) {
-    sendResponse("Database error occurred", 500);
 } catch (Exception $e) {
-    sendResponse("Server error", 500);
+    sendResponse("Server error: " . $e->getMessage(), 500);
 }
 // ============================================================================
 // HELPER FUNCTIONS
@@ -449,7 +458,6 @@ http_response_code($statusCode);
     }
     exit;
 }
-
 
 
 
