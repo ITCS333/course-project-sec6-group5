@@ -1,11 +1,9 @@
+
 // --- Global Data Store ---
-let currentWeekId  = null;
+let currentWeekId = null;
 let currentComments = [];
 
 // --- Element Selections ---
-// TODO: Select each element by its id:
-//   weekTitle, weekStartDate, weekDescription,
-//   weekLinksList, commentList, commentForm, newCommentInput.
 const weekTitle = document.getElementById("week-title");
 const weekStartDate = document.getElementById("week-start-date");
 const weekDescription = document.getElementById("week-description");
@@ -17,20 +15,21 @@ const newCommentInput = document.getElementById("new-comment");
 // --- Functions ---
 
 function getWeekIdFromURL() {
-  // TODO: Implement getWeekIdFromURL.
   const params = new URLSearchParams(window.location.search);
   return params.get("id");
 }
 
 function renderWeekDetails(week) {
-  // TODO: Implement renderWeekDetails.
   weekTitle.textContent = week.title;
   weekStartDate.textContent = "Starts on: " + week.start_date;
   weekDescription.textContent = week.description;
 
   weekLinksList.innerHTML = "";
 
-  week.links.forEach(url => {
+  // ✅ FIX: prevent crash if links is undefined/null
+  const links = week.links || [];
+
+  links.forEach(url => {
     const li = document.createElement("li");
     const a = document.createElement("a");
 
@@ -44,7 +43,6 @@ function renderWeekDetails(week) {
 }
 
 function createCommentArticle(comment) {
-  // TODO: Implement createCommentArticle.
   const article = document.createElement("article");
 
   article.innerHTML = `
@@ -56,24 +54,20 @@ function createCommentArticle(comment) {
 }
 
 function renderComments() {
-  // TODO: Implement renderComments.
   commentList.innerHTML = "";
 
   currentComments.forEach(comment => {
-    const article = createCommentArticle(comment);
-    commentList.appendChild(article);
+    commentList.appendChild(createCommentArticle(comment));
   });
 }
 
 async function handleAddComment(event) {
-  // TODO: Implement handleAddComment (async).
   event.preventDefault();
 
   const commentText = newCommentInput.value.trim();
-
   if (!commentText) return;
 
-  const response = await fetch(`./api/index.php?action=comment`, {
+  const response = await fetch("./api/index.php?action=comment", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -95,8 +89,6 @@ async function handleAddComment(event) {
 }
 
 async function initializePage() {
-  // TODO: Implement initializePage (async).
-
   currentWeekId = getWeekIdFromURL();
 
   if (!currentWeekId) {
@@ -118,6 +110,7 @@ async function initializePage() {
   }
 
   const week = weekResult.data;
+
   currentComments = commentsResult.success ? commentsResult.data : [];
 
   renderWeekDetails(week);
@@ -126,5 +119,5 @@ async function initializePage() {
   commentForm.addEventListener("submit", handleAddComment);
 }
 
-// --- Initial Page Load ---
+// --- Start ---
 initializePage();
