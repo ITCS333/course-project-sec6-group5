@@ -1,16 +1,16 @@
-// 1. تعريف العناصر
+// 1. تعريف العناصر الأساسية
 const assignmentForm = document.getElementById('assignment-form');
 const assignmentsTbody = document.getElementById('assignments-tbody');
 
 let assignments = [];
 
-// [JS-24, JS-25, JS-26] إنشاء الصف
+// [JS-24, JS-25, JS-26] إنشاء صف الجدول
 function createAssignmentRow(assignment) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td>${assignment.title}</td>
-        <td>${assignment.due_date}</td>
-        <td>${assignment.description}</td>
+        <td>${assignment.title || ''}</td>
+        <td>${assignment.due_date || ''}</td>
+        <td>${assignment.description || ''}</td>
         <td>
             <button class="edit-btn" data-id="${assignment.id}">Edit</button>
             <button class="delete-btn" data-id="${assignment.id}">Delete</button>
@@ -29,17 +29,18 @@ function renderTable() {
     });
 }
 
-// [JS-29, JS-30] إضافة واجب
+// [JS-29, JS-30] إضافة واجب جديد
 async function handleAddAssignment(event) {
     if (event) event.preventDefault(); 
-    const titleEl = document.querySelector('[name="title"]');
-    const dateEl = document.querySelector('[name="due_date"]');
-    const descEl = document.querySelector('[name="description"]');
+
+    const titleInput = document.querySelector('[name="title"]');
+    const dateInput = document.querySelector('[name="due_date"]');
+    const descInput = document.querySelector('[name="description"]');
 
     const newAssignment = {
-        title: titleEl ? titleEl.value : '',
-        due_date: dateEl ? dateEl.value : '',
-        description: descEl ? descEl.value : '',
+        title: titleInput ? titleInput.value : '',
+        due_date: dateInput ? dateInput.value : '',
+        description: descInput ? descInput.value : '',
         files: [] 
     };
 
@@ -57,7 +58,7 @@ async function handleAddAssignment(event) {
     } catch (error) { console.error(error); }
 }
 
-// [JS-31, JS-32] التعديل والحذف
+// [JS-31, JS-32] التعديل والحذف (تمت إضافة الحماية هنا لحل خطأ الصورة 75)
 async function handleTableClick(event) {
     const target = event.target;
     const id = target.getAttribute('data-id');
@@ -73,14 +74,19 @@ async function handleTableClick(event) {
     } else if (target.classList.contains('edit-btn')) {
         const assignment = assignments.find(a => a.id == id);
         if (assignment) {
-            document.querySelector('[name="title"]').value = assignment.title;
-            document.querySelector('[name="due_date"]').value = assignment.due_date;
-            document.querySelector('[name="description"]').value = assignment.description;
+            // الحماية: التأكد من وجود العناصر قبل وضع القيمة (Value)
+            const titleInput = document.querySelector('[name="title"]');
+            const dateInput = document.querySelector('[name="due_date"]');
+            const descInput = document.querySelector('[name="description"]');
+
+            if (titleInput) titleInput.value = assignment.title;
+            if (dateInput) dateInput.value = assignment.due_date;
+            if (descInput) descInput.value = assignment.description;
         }
     }
 }
 
-// [JS-33, JS-34, JS-35] الدالة المطلوبة بالاسم
+// [JS-33, JS-34, JS-35] التشغيل والربط
 async function loadAndInitialize() {
     try {
         const response = await fetch('./api/index.php');
@@ -89,10 +95,18 @@ async function loadAndInitialize() {
             assignments = result.data;
             renderTable();
         }
-        if (assignmentForm) assignmentForm.addEventListener('submit', handleAddAssignment);
-        if (assignmentsTbody) assignmentsTbody.addEventListener('click', handleTableClick);
+        
+        // ربط الأحداث فقط إذا كانت العناصر موجودة
+        if (assignmentForm) {
+            assignmentForm.removeEventListener('submit', handleAddAssignment);
+            assignmentForm.addEventListener('submit', handleAddAssignment);
+        }
+        if (assignmentsTbody) {
+            assignmentsTbody.removeEventListener('click', handleTableClick);
+            assignmentsTbody.addEventListener('click', handleTableClick);
+        }
     } catch (error) { console.error(error); }
 }
 
-// تشغيل الدالة
+// تشغيل الدالة النهائية
 loadAndInitialize();
