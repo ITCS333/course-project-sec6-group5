@@ -1,11 +1,11 @@
-و// 1. اختيار العناصر
+// 1. تعريف العناصر الأساسية
 const assignmentForm = document.getElementById('assignment-form');
 const assignmentsTbody = document.getElementById('assignments-tbody');
 
 let assignments = [];
 
 // [JS-24, JS-25, JS-26] إنشاء صف الجدول
-function createAssignmentRow(assignment) {
+window.createAssignmentRow = function(assignment) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td>${assignment.title}</td>
@@ -17,32 +17,31 @@ function createAssignmentRow(assignment) {
         </td>
     `;
     return tr;
-}
+};
 
 // [JS-27, JS-28] عرض الجدول
-function renderTable() {
+window.renderTable = function() {
     if (!assignmentsTbody) return;
     assignmentsTbody.innerHTML = ''; 
     assignments.forEach(assignment => {
         const row = createAssignmentRow(assignment);
         assignmentsTbody.appendChild(row);
     });
-}
+};
 
 // [JS-29, JS-30] إضافة واجب جديد
-async function handleAddAssignment(event) {
+window.handleAddAssignment = async function(event) {
     if (event) event.preventDefault(); 
 
     const titleEl = document.querySelector('[name="title"]');
     const dateEl = document.querySelector('[name="due_date"]');
     const descEl = document.querySelector('[name="description"]');
-    const filesEl = document.querySelector('[name="files"]');
 
     const newAssignment = {
         title: titleEl ? titleEl.value : '',
         due_date: dateEl ? dateEl.value : '',
         description: descEl ? descEl.value : '',
-        files: (filesEl && filesEl.value) ? filesEl.value.split(',') : []
+        files: [] 
     };
 
     try {
@@ -60,15 +59,14 @@ async function handleAddAssignment(event) {
     } catch (error) {
         console.error("Error adding assignment:", error);
     }
-}
+};
 
-// [JS-31, JS-32] معالجة النقر داخل الجدول (تعديل وحذف)
-async function handleTableClick(event) {
+// [JS-31, JS-32] معالجة النقر (حذف وتعديل)
+window.handleTableClick = async function(event) {
     const target = event.target;
     const id = target.getAttribute('data-id');
 
     if (target.classList.contains('delete-btn')) {
-        // [JS-31] حذف الواجب
         const response = await fetch(`./api/index.php?id=${id}`, { method: 'DELETE' });
         const result = await response.json();
         if (result.success) {
@@ -76,17 +74,17 @@ async function handleTableClick(event) {
             renderTable();
         }
     } else if (target.classList.contains('edit-btn')) {
-        // [JS-32] تعبئة النموذج للتعديل
         const assignment = assignments.find(a => a.id == id);
         if (assignment) {
-            document.querySelector('[name="title"]').value = assignment.title;
-            document.querySelector('[name="due_date"]').value = assignment.due_date;
-            document.querySelector('[name="description"]').value = assignment.description;
+            if (document.querySelector('[name="title"]')) document.querySelector('[name="title"]').value = assignment.title;
+            if (document.querySelector('[name="due_date"]')) document.querySelector('[name="due_date"]').value = assignment.due_date;
+            if (document.querySelector('[name="description"]')) document.querySelector('[name="description"]').value = assignment.description;
         }
     }
-}
+};
 
-async function loadAndInitialize() {
+// [JS-33, JS-34, JS-35] الدالة الرئيسية للتشغيل
+window.loadAndInitialize = async function() {
     try {
         const response = await fetch('./api/index.php');
         const result = await response.json();
@@ -95,7 +93,7 @@ async function loadAndInitialize() {
             renderTable();
         }
         
-        // ربط الأحداث (JS-35)
+        // ربط الأحداث
         if (assignmentForm) {
             assignmentForm.addEventListener('submit', handleAddAssignment);
         }
@@ -103,9 +101,9 @@ async function loadAndInitialize() {
             assignmentsTbody.addEventListener('click', handleTableClick);
         }
     } catch (error) {
-        console.error("Error initialization:", error);
+        console.error("Init error:", error);
     }
-}
+};
 
-// تشغيل الدالة النهائية المطلوبة في الاختبار
+// تشغيل النظام
 loadAndInitialize();
