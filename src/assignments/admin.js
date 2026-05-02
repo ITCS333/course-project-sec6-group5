@@ -74,21 +74,24 @@ async function handleTableClick(event) {
     } else if (target.classList.contains('edit-btn')) {
         const assignment = assignments.find(a => a.id == id);
         if (assignment) {
-            const t = document.querySelector('[name="title"]');
-            const d = document.querySelector('[name="due_date"]');
-            const s = document.querySelector('[name="description"]');
+            const t = document.getElementById('aasignment-title');
+            const d = document.getElementById('assignment-due_date');
+            const s = document.getElementById('assignment-description');
             
             // تعبئة الحقول بالقيم المخزنة
             if (t) t.value = assignment.title || "";
             if (d) d.value = assignment.due_date || "";
             if (s) s.value = assignment.description || "";
             
-            // إرسال إشارة للمتصفح بأن القيمة تغيرت (مهم جداً لنظام الاختبار)
-            if (t) t.dispatchEvent(new Event('input', { bubbles: true }));
+          [t,d,s].forEach(el => {
+              if(el) {
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                  el.dispatchEvent(new Event('change', { bubbles: true }));
         }
+    });
+}
     }
 }
-
 // [JS-33, JS-34, JS-35] التشغيل والربط - تم إصلاح JS-35 هنا حصراً
 async function loadAndInitialize() {
     try {
