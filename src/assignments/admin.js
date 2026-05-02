@@ -74,22 +74,23 @@ async function handleTableClick(event) {
     } else if (target.classList.contains('edit-btn')) {
         const assignment = assignments.find(a => a.id == id);
         if (assignment) {
-            const t = document.getElementById('aasignment-title');
-            const d = document.getElementById('assignment-due_date');
+            const t = document.getElementById('assignment-title');
+            const d = document.getElementById('assignment-due-date');
             const s = document.getElementById('assignment-description');
             
-            // تعبئة الحقول بالقيم المخزنة
             if (t) t.value = assignment.title || "";
             if (d) d.value = assignment.due_date || "";
             if (s) s.value = assignment.description || "";
             
-          [t,d,s].forEach(el => {
-              if(el) {
-                el.dispatchEvent(new Event('input', { bubbles: true }));
-                  el.dispatchEvent(new Event('change', { bubbles: true }));
+            // التعديل هنا: استخدام CustomEvent بدلاً من Event لتجنب مشكلة الـ ReferenceError
+            // وإضافة فحص لضمان أننا في بيئة تدعم هذه الوظائف
+            [t, d, s].forEach(el => {
+                if (el && typeof CustomEvent !== 'undefined') {
+                    el.dispatchEvent(new CustomEvent('input', { bubbles: true }));
+                    el.dispatchEvent(new CustomEvent('change', { bubbles: true }));
+                }
+            });
         }
-    });
-}
     }
 }
 // [JS-33, JS-34, JS-35] التشغيل والربط - تم إصلاح JS-35 هنا حصراً
