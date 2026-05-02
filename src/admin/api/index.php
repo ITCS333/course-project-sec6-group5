@@ -1,22 +1,17 @@
 <?php
-// منع ظهور الأخطاء كـ HTML لضمان استلام JSON نظيف في الاختبارات
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-// إعدادات الـ Headers لضمان توافق الـ API
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-// معالجة طلب Preflight الخاص بـ CORS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// تصحيح المسار للوصول إلى ملف db.php داخل مجلد common
-// نخرج مرتين (من api ثم من admin) للدخول إلى common
 require_once __DIR__ . "/../../common/db.php"; 
 
 try {
@@ -25,19 +20,16 @@ try {
     sendResponse("Database connection failed: " . $e->getMessage(), 500);
 }
 
-// قراءة طريقة الطلب والبيانات القادمة
 $method = $_SERVER['REQUEST_METHOD'];
 $rawInput = file_get_contents("php://input");
 $data = json_decode($rawInput, true) ?? [];
 
-// استخراج المعاملات من الرابط (URL)
 $id = isset($_GET['id']) ? (int)$_GET['id'] : (isset($data['id']) ? (int)$data['id'] : null);
 $action = $_GET['action'] ?? null;
 $search = $_GET['search'] ?? null;
 $sort = $_GET['sort'] ?? null;
 $order = $_GET['order'] ?? 'asc';
 
-// --- Functions ---
 
 function getUsers($db) {
     global $search, $sort, $order;
