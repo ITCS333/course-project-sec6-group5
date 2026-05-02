@@ -77,7 +77,7 @@ if($_SERVER['REQUEST_METHOD']=== 'OPTIONS'){
     http_response_code(200);
     exit;
 }
-
+ 
 
 // TODO: Include the shared database connection file.
 // require_once __DIR__ . '/../../common/db.php';
