@@ -253,3 +253,12 @@ UNION ALL
 SELECT 'Comments (Resources)', COUNT(*) FROM comments_resource
 UNION ALL
 SELECT 'Comments (Weeks)', COUNT(*) FROM comments_week;
+
+
+INSERT INTO assignments (id, title, description, due_date) VALUES 
+(1, 'HTML & CSS Portfolio', 'Create a personal portfolio using HTML and CSS', '2026-05-20'),
+(2, 'JavaScript Calculator', 'Build a functional calculator using JavaScript', '2026-06-15');
+
+ 
+INSERT INTO comments_assignment (assignment_id, author, text) VALUES 
+(1, 'System', 'Initial seeded comment for testing');
