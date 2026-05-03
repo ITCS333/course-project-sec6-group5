@@ -1,33 +1,44 @@
 <?php
-/**
- * النسخة النهائية المكتملة لملف API الواجبات والتعليقات
- * مصممة لاجتياز اختبارات Autograding بنجاح
- */
-
-// تعطيل عرض الأخطاء المباشر لمنع تداخلها مع مخرجات JSON
-ini_set('display_errors', 0);
+// 1. إعدادات عرض الأخطاء للتشخيص
+ini_set('display_errors', 0); 
 error_reporting(E_ALL);
 
-// 1. استدعاء ملف الاتصال - تأكدي أن الملف موجود بنفس المجلد
-require_once 'db_connection.php'; 
+// 2. محاولة استدعاء ملف الاتصال بأكثر من اسم شائع (لحل مشكلة الاسم)
+if (file_exists('db_connection.php')) {
+    require_once 'db_connection.php';
+} elseif (file_exists('db.php')) {
+    require_once 'db.php';
+} elseif (file_exists('config.php')) {
+    require_once 'config.php';
+}
 
-// 2. إعداد متغيرات الطلب
+// 3. إعداد متغيرات الطلب
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $action = $_GET['action'] ?? '';
 $input = file_get_contents('php://input');
 $data = json_decode($input, true) ?? [];
 
-// التحقق من وجود متغير $db لضمان عدم إرجاع null
+// 4. التأكد من وجود المتغير $db وتصحيحه إذا كان مختلفاً
+if (!isset($db)) {
+    // محاولة البحث عن أي متغير PDO معرف إذا لم يكن اسمه $db
+    foreach (get_defined_vars() as $var) {
+        if ($var instanceof PDO) {
+            $db = $var;
+            break;
+        }
+    }
+}
+
+// إذا استمر عدم وجود الاتصال، نرسل JSON يوضح المشكلة بدلاً من null
 if (!isset($db)) {
     header('Content-Type: application/json');
-    http_response_code(500);
-    echo json_encode(["success" => false, "message" => "Database connection error"]);
+    echo json_encode(["success" => false, "message" => "Database connection variable not found. Check your file name."]);
     exit;
 }
 
 try {
     // ==========================================
-    // موجه الطلبات (ROUTER)
+    // موجه الطلبات (The Router)
     // ==========================================
     if ($method === 'GET') {
         if ($action === 'comments') {
@@ -60,26 +71,21 @@ try {
     }
 
 } catch (Throwable $e) {
-    // التقاط أي خطأ لضمان إرسال JSON صحيح دائماً
-    error_log($e->getMessage());
-    sendResponse(["success" => false, "message" => "Server Error"], 500);
+    sendResponse(["success" => false, "message" => "Error: " . $e->getMessage()], 500);
 }
 
 // ==========================================
-// الدوال الأساسية (CORE FUNCTIONS)
+// الدوال الأساسية (Core Functions)
 // ==========================================
 
 function getAllAssignments($db) {
     $search = $_GET['search'] ?? null;
     $sql = "SELECT * FROM assignments";
     $params = [];
-
-    // دعم البحث لتجاوز اختبار Test 5
     if ($search) {
         $sql .= " WHERE title LIKE ? OR description LIKE ?";
         $params = ["%$search%", "%$search%"];
     }
-
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     sendResponse(["success" => true, "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
@@ -89,37 +95,23 @@ function getAssignmentById($db, $id) {
     $stmt = $db->prepare("SELECT * FROM assignments WHERE id = ?");
     $stmt->execute([$id]);
     $res = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // إرسال 404 لتجاوز اختبار Test 4
     if ($res) {
         sendResponse(["success" => true, "data" => $res]);
     } else {
-        sendResponse(["success" => false, "message" => "Not Found"], 404);
+        sendResponse(["success" => false], 404);
     }
 }
 
 function createAssignment($db, $data) {
-    $sql = "INSERT INTO assignments (title, description, due_date) VALUES (?, ?, ?)";
-    $stmt = $db->prepare($sql);
-    $stmt->execute([
-        $data['title'] ?? '', 
-        $data['description'] ?? '', 
-        $data['due_date'] ?? ''
-    ]);
-    // إرسال كود 201 لتجاوز اختبار Test 6
+    $stmt = $db->prepare("INSERT INTO assignments (title, description, due_date) VALUES (?, ?, ?)");
+    $stmt->execute([$data['title'] ?? '', $data['description'] ?? '', $data['due_date'] ?? '']);
     sendResponse(["success" => true, "id" => $db->lastInsertId()], 201);
 }
 
 function updateAssignment($db, $data) {
     $id = $_GET['id'] ?? null;
-    $sql = "UPDATE assignments SET title = ?, description = ?, due_date = ? WHERE id = ?";
-    $stmt = $db->prepare($sql);
-    $stmt->execute([
-        $data['title'] ?? '', 
-        $data['description'] ?? '', 
-        $data['due_date'] ?? '', 
-        $id
-    ]);
+    $stmt = $db->prepare("UPDATE assignments SET title = ?, description = ?, due_date = ? WHERE id = ?");
+    $stmt->execute([$data['title'] ?? '', $data['description'] ?? '', $data['due_date'] ?? '', $id]);
     sendResponse(["success" => true]);
 }
 
@@ -140,13 +132,8 @@ function getCommentsByAssignment($db, $assignmentId) {
 }
 
 function createComment($db, $data) {
-    $sql = "INSERT INTO comments_assignment (assignment_id, author, text) VALUES (?, ?, ?)";
-    $stmt = $db->prepare($sql);
-    $stmt->execute([
-        $data['assignment_id'] ?? null, 
-        $data['author'] ?? '', 
-        $data['text'] ?? ''
-    ]);
+    $stmt = $db->prepare("INSERT INTO comments_assignment (assignment_id, author, text) VALUES (?, ?, ?)");
+    $stmt->execute([$data['assignment_id'] ?? null, $data['author'] ?? '', $data['text'] ?? '']);
     sendResponse(["success" => true, "id" => $db->lastInsertId()], 201);
 }
 
@@ -156,17 +143,9 @@ function deleteComment($db, $commentId) {
     sendResponse(["success" => true]);
 }
 
-// ==========================================
-// الدوال المساعدة (HELPERS)
-// ==========================================
-
 function sendResponse($data, $status = 200) {
     header('Content-Type: application/json');
     http_response_code($status);
     echo json_encode($data);
     exit;
-}
-
-function sanitizeInput($data) {
-    return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
 }
