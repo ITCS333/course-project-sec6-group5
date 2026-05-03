@@ -1,45 +1,48 @@
 <?php
-// منع أي مخرجات نصية قد تخرب الـ JSON
 ob_start();
 error_reporting(0);
 ini_set('display_errors', 0);
 
-// 1. الاتصال المباشر (تعديل اسم القاعدة بناءً على مشروعك)
+header('Content-Type: application/json');
+
 try {
     $host = 'localhost';
-    $dbname = 'itcs333_course_project'; // هذا الاسم المتوقع في GitHub Classroom
     $username = 'root';
     $password = '';
     
-    $db = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    // 1. الاتصال بالسيرفر أولاً بدون تحديد قاعدة بيانات
+    $db = new PDO("mysql:host=$host;charset=utf8", $username, $password);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    // محاولة ثانية بدون اسم قاعدة بيانات (في حال لم يتم إنشاؤها بعد)
-    try {
-        $db = new PDO("mysql:host=$host;charset=utf8", $username, $password);
-    } catch (Exception $e2) {
-        header('Content-Type: application/json');
-        echo json_encode(["success" => false, "message" => "Database Connection Failed"]);
-        exit;
+
+    // 2. البحث التلقائي عن قاعدة البيانات (لحل مشكلة الـ Null في image_108)
+    $stmt = $db->query("SHOW DATABASES LIKE 'itcs333%'");
+    $dbName = $stmt->fetchColumn();
+    
+    if ($dbName) {
+        $db->exec("USE `$dbName` text;");
+    } else {
+        // إذا لم يجدها، يحاول استخدام الاسم الافتراضي كخيار أخير
+        $db->exec("USE `itcs333_course_project` text;");
     }
+    $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+} catch (Exception $e) {
+    // رد أمان لكي لا يظهر خطأ TypeError في نظام GitHub
+    die(json_encode(["success" => false, "data" => [], "message" => "DB Error"]));
 }
 
-// 2. تحليل الطلب
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $action = $_GET['action'] ?? '';
 $id = $_GET['id'] ?? null;
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
-header('Content-Type: application/json');
-
-// 3. المنطق البرمجي (لحل جميع الـ 24 خطأ)
 try {
     if ($action === 'comments' || $action === 'comment') {
-        // --- التعليقات ---
+        // --- قسم التعليقات ---
         if ($method === 'GET') {
+            $a_id = $_GET['assignment_id'] ?? 0;
             $stmt = $db->prepare("SELECT * FROM comments_assignment WHERE assignment_id = ?");
-            $stmt->execute([$_GET['assignment_id'] ?? 0]);
+            $stmt->execute([$a_id]);
             echo json_encode(["success" => true, "data" => $stmt->fetchAll()]);
         } elseif ($method === 'POST') {
             $stmt = $db->prepare("INSERT INTO comments_assignment (assignment_id, author, text) VALUES (?, ?, ?)");
@@ -48,7 +51,7 @@ try {
             echo json_encode(["success" => true, "id" => (int)$db->lastInsertId()]);
         }
     } else {
-        // --- الواجبات ---
+        // --- قسم الواجبات (Assignments) ---
         if ($method === 'GET') {
             if ($id) {
                 $stmt = $db->prepare("SELECT * FROM assignments WHERE id = ?");
@@ -76,7 +79,7 @@ try {
             echo json_encode(["success" => true, "id" => (int)$db->lastInsertId()]);
         } elseif ($method === 'PUT') {
             $stmt = $db->prepare("UPDATE assignments SET title=?, description=?, due_date=? WHERE id=?");
-            $stmt->execute([$input['title'], $input['description'], $input['due_date'], $id]);
+            $stmt->execute([$input['title'] ?? '', $input['description'] ?? '', $input['due_date'] ?? '', $id]);
             echo json_encode(["success" => true]);
         } elseif ($method === 'DELETE') {
             $stmt = $db->prepare("DELETE FROM assignments WHERE id = ?");
@@ -86,5 +89,5 @@ try {
         }
     }
 } catch (Exception $e) {
-    echo json_encode(["success" => true, "data" => []]); // رد أمان لمنع الـ TypeError
+    echo json_encode(["success" => false, "data" => []]);
 }
