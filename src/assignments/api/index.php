@@ -1,103 +1,44 @@
 <?php
-ob_start();
-error_reporting(0);
-ini_set('display_errors', 0);
 header('Content-Type: application/json');
+error_reporting(0);
 
-// 1. الاتصال المضمون بقاعدة البيانات
-try {
-    $db = new PDO("mysql:host=localhost;charset=utf8", 'root', '');
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-
-    // التأكد من قاعدة البيانات الصحيحة
-    $findDB = $db->query("SHOW DATABASES LIKE 'itcs333%'")->fetchColumn();
-    if ($findDB) $db->exec("USE `$findDB` ");
-} catch (Exception $e) {
-    die(json_encode(["success" => true, "data" => []]));
+// اتصال مباشر ومبسط
+$db = new mysqli("localhost", "root", "", "course");
+if ($db->connect_error) {
+    // محاولة الاتصال بدون تحديد قاعدة بيانات إذا فشل الأول
+    $db = new mysqli("localhost", "root", "");
+    $find = $db->query("SHOW DATABASES LIKE 'itcs333%'")->fetch_row();
+    $db->select_db($find[0]);
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
 $id = $_GET['id'] ?? null;
-$input = json_decode(file_get_contents('php://input'), true) ?? [];
+$action = $_GET['action'] ?? '';
 
-// 2. التوجيه (Routing)
-if ($action === 'comments' || $action === 'comment') {
-    handleComments($db, $method, $input);
-} else {
-    handleAssignments($db, $method, $id, $input);
-}
-
-// --- دالة الواجبات (Assignments) ---
-function handleAssignments($db, $method, $id, $input) {
-    if ($method === 'GET') {
-        if ($id) {
-            $stmt = $db->prepare("SELECT * FROM assignments WHERE id = ?");
-            $stmt->execute([$id]);
-            $res = $stmt->fetch();
-            if ($res) {
-                echo json_encode(["success" => true, "data" => $res]);
-            } else {
-                // حل خطأ image_116: يتوقع 404 عند عدم وجود الـ ID
-                http_response_code(404);
-                echo json_encode(["success" => false]);
-            }
-        } else {
-            // دعم البحث لفلترة النتائج (Search)
-            $search = $_GET['search'] ?? null;
-            $sql = "SELECT * FROM assignments";
-            $params = [];
-            if ($search) {
-                $sql .= " WHERE title LIKE ? OR description LIKE ?";
-                $params = ["%$search%", "%$search%"];
-            }
-            $stmt = $db->prepare($sql);
-            $stmt->execute($params);
-            echo json_encode(["success" => true, "data" => $stmt->fetchAll()]);
-        }
-    } 
-    elseif ($method === 'POST') {
-        // حل خطأ image_116: يتوقع 201 عند النجاح و 400 عند نقص البيانات
-        if (empty($input['title'])) {
-            http_response_code(400);
-            echo json_encode(["success" => false]);
-            return;
-        }
-        $stmt = $db->prepare("INSERT INTO assignments (title, description, due_date) VALUES (?, ?, ?)");
-        $stmt->execute([$input['title'], $input['description'] ?? '', $input['due_date'] ?? '2026-12-31']);
-        http_response_code(201);
-        echo json_encode(["success" => true, "id" => (int)$db->lastInsertId()]);
-    } 
-    elseif ($method === 'DELETE') {
-        $stmt = $db->prepare("DELETE FROM assignments WHERE id = ?");
-        $stmt->execute([$id]);
-        if ($stmt->rowCount() > 0) {
-            echo json_encode(["success" => true]);
-        } else {
-            http_response_code(404);
-            echo json_encode(["success" => false]);
-        }
+if ($action == 'comments') {
+    if ($method == 'GET') {
+        $aid = $_GET['assignment_id'];
+        $res = $db->query("SELECT * FROM comments_assignment WHERE assignment_id = $aid");
+        echo json_encode(["success" => true, "data" => $res->fetch_all(MYSQLI_ASSOC)]);
     }
-}
-
-// --- دالة التعليقات (Comments) ---
-function handleComments($db, $method, $input) {
-    if ($method === 'GET') {
-        $assignment_id = $_GET['assignment_id'] ?? 0;
-        $stmt = $db->prepare("SELECT * FROM comments_assignment WHERE assignment_id = ?");
-        $stmt->execute([$assignment_id]);
-        echo json_encode(["success" => true, "data" => $stmt->fetchAll()]);
-    } 
-    elseif ($method === 'POST') {
-        if (empty($input['assignment_id']) || empty($input['text'])) {
-            http_response_code(400);
-            echo json_encode(["success" => false]);
-            return;
+} else {
+    if ($method == 'GET') {
+        if ($id) {
+            $res = $db->query("SELECT * FROM assignments WHERE id = $id");
+            $data = $res->fetch_assoc();
+            if ($data) echo json_encode(["success" => true, "data" => $data]);
+            else { http_response_code(404); echo json_encode(["success" => false]); }
+        } else {
+            $search = $_GET['search'] ?? '';
+            $sql = "SELECT * FROM assignments" . ($search ? " WHERE title LIKE '%$search%'" : "");
+            $res = $db->query($sql);
+            echo json_encode(["success" => true, "data" => $res->fetch_all(MYSQLI_ASSOC)]);
         }
-        $stmt = $db->prepare("INSERT INTO comments_assignment (assignment_id, author, text) VALUES (?, ?, ?)");
-        $stmt->execute([$input['assignment_id'], $input['author'] ?? 'Anonymous', $input['text']]);
+    } elseif ($method == 'POST') {
+        $in = json_decode(file_get_contents('php://input'), true);
+        if (!$in['title']) { http_response_code(400); die(json_encode(["success" => false])); }
+        $db->query("INSERT INTO assignments (title, description, due_date) VALUES ('{$in['title']}', '{$in['description']}', '{$in['due_date']}')");
         http_response_code(201);
-        echo json_encode(["success" => true, "id" => (int)$db->lastInsertId()]);
+        echo json_encode(["success" => true, "id" => $db->insert_id]);
     }
 }
